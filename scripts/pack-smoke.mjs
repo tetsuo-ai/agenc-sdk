@@ -15,6 +15,108 @@ function run(command, args, cwd) {
   });
 }
 
+function buildWriteSmokeSource({ esm }) {
+  const lines = esm
+    ? [
+        "import { Keypair } from '@solana/web3.js';",
+        "const sdk = await import('@tetsuo-ai/sdk');",
+      ]
+    : [
+        "const { Keypair } = require('@solana/web3.js');",
+        "const sdk = require('@tetsuo-ai/sdk');",
+      ];
+
+  return [
+    ...lines,
+    "(async () => {",
+    "function makeBuilder(signature) {",
+    "  return {",
+    "    accountsPartial() { return this; },",
+    "    signers() { return this; },",
+    "    remainingAccounts() { return this; },",
+    "    preInstructions() { return this; },",
+    "    rpc() { return Promise.resolve(signature); },",
+    "  };",
+    "}",
+    "const authority = Keypair.generate();",
+    "const secondSigner = Keypair.generate();",
+    "const creator = Keypair.generate();",
+    "const connection = { confirmTransaction: () => Promise.resolve() };",
+    "const program = {",
+    "  programId: sdk.PROGRAM_ID,",
+    "  methods: {",
+    "    registerAgent(...args) {",
+    "      if (args[1].toString() !== '42') throw new Error('registerAgent BN conversion failed');",
+    "      if (args[4].toString() !== '1000') throw new Error('registerAgent stake BN conversion failed');",
+    "      return makeBuilder('register-agent-sig');",
+    "    },",
+    "    createTask(...args) {",
+    "      if (args[1].toString() !== '7') throw new Error('createTask capability BN conversion failed');",
+    "      if (args[3].toString() !== '1000') throw new Error('createTask reward BN conversion failed');",
+    "      if (args[5].toString() !== '1735689600') throw new Error('createTask deadline BN conversion failed');",
+    "      return makeBuilder('create-task-sig');",
+    "    },",
+    "    initializeGovernance(...args) {",
+    "      if (args[0].toString() !== '60') throw new Error('initializeGovernance votingPeriod BN conversion failed');",
+    "      if (args[1].toString() !== '30') throw new Error('initializeGovernance executionDelay BN conversion failed');",
+    "      if (args[4].toString() !== '250') throw new Error('initializeGovernance stake BN conversion failed');",
+    "      return makeBuilder('initialize-governance-sig');",
+    "    },",
+    "    initializeProtocol(...args) {",
+    "      if (args[2].toString() !== '1000000') throw new Error('initializeProtocol minStake BN conversion failed');",
+    "      if (args[3].toString() !== '500000') throw new Error('initializeProtocol disputeStake BN conversion failed');",
+    "      return makeBuilder('initialize-protocol-sig');",
+    "    },",
+    "    updateState(...args) {",
+    "      if (args[2].toString() !== '1') throw new Error('updateState version BN conversion failed');",
+    "      return makeBuilder('update-state-sig');",
+    "    },",
+    "  },",
+    "};",
+    "await sdk.registerAgent(connection, program, authority, {",
+    "  agentId: new Uint8Array(32).fill(1),",
+    "  capabilities: 42,",
+    "  endpoint: 'https://agent.example.com',",
+    "  stakeAmount: 1000,",
+    "});",
+    "await sdk.createTask(connection, program, creator, new Uint8Array(32).fill(2), {",
+    "  taskId: new Uint8Array(32).fill(3),",
+    "  requiredCapabilities: 7,",
+    "  description: Buffer.alloc(64, 1),",
+    "  rewardAmount: 1000,",
+    "  maxWorkers: 1,",
+    "  deadline: 1735689600,",
+    "  taskType: 0,",
+    "});",
+    "await sdk.initializeGovernance(connection, program, authority, {",
+    "  votingPeriod: 60,",
+    "  executionDelay: 30,",
+    "  quorumBps: 5000,",
+    "  approvalThresholdBps: 6000,",
+    "  minProposalStake: 250,",
+    "});",
+    "await sdk.initializeProtocol(connection, program, authority, secondSigner, Keypair.generate().publicKey, {",
+    "  disputeThreshold: 51,",
+    "  protocolFeeBps: 100,",
+    "  minStake: 1000000,",
+    "  minStakeForDispute: 500000,",
+    "  multisigThreshold: 2,",
+    "  multisigOwners: [authority.publicKey, secondSigner.publicKey],",
+    "});",
+    "await sdk.updateState(connection, program, authority, {",
+    "  agentId: new Uint8Array(32).fill(4),",
+    "  stateKey: new Uint8Array(32).fill(5),",
+    "  stateValue: new Uint8Array(64).fill(6),",
+    "  version: 1,",
+    "});",
+    "console.log('sdk-write-smoke-ok');",
+    "})().catch((error) => {",
+    "  console.error(error);",
+    "  process.exit(1);",
+    "});",
+  ].join(' ');
+}
+
 async function main() {
   const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'agenc-sdk-pack-smoke.'));
   let tarballPath = null;
@@ -42,6 +144,24 @@ async function main() {
     const smokeOutput = run('node', ['-e', smokeSource], tempRoot).trim();
     if (smokeOutput !== 'sdk-smoke-ok') {
       throw new Error(`unexpected package smoke output: ${smokeOutput}`);
+    }
+
+    const cjsWriteSmokeOutput = run(
+      'node',
+      ['-e', buildWriteSmokeSource({ esm: false })],
+      tempRoot,
+    ).trim();
+    if (cjsWriteSmokeOutput !== 'sdk-write-smoke-ok') {
+      throw new Error(`unexpected CJS write smoke output: ${cjsWriteSmokeOutput}`);
+    }
+
+    const esmWriteSmokeOutput = run(
+      'node',
+      ['--input-type=module', '-e', buildWriteSmokeSource({ esm: true })],
+      tempRoot,
+    ).trim();
+    if (esmWriteSmokeOutput !== 'sdk-write-smoke-ok') {
+      throw new Error(`unexpected ESM write smoke output: ${esmWriteSmokeOutput}`);
     }
 
     const exampleRoot = path.join(tempRoot, 'private-task-demo');
