@@ -31,6 +31,7 @@ const DEFAULT_TASK_ID = 1;
 const DEFAULT_SALT = 12345n;
 const DEFAULT_SUBMISSION_DELAY_MS = 500;
 const DEFAULT_PAYLOAD_SIM_DELAY_MS = 1200;
+const DEMO_AGENT_SECRET_DOMAIN = Buffer.from('AGENC_PRIVATE_TASK_DEMO_AGENT_SECRET');
 
 function usage(): void {
   console.log(`Usage:
@@ -41,6 +42,9 @@ Environment:
   HELIUS_API_KEY                 Optional mainnet RPC key; falls back to Solana devnet
   PRIVATE_DEMO_TASK_ID           Override task id (default: ${DEFAULT_TASK_ID})
   PRIVATE_DEMO_SALT              Override output salt (default: ${DEFAULT_SALT})
+  PRIVATE_DEMO_AGENT_SECRET      Optional private witness for nullifier derivation.
+                                 If omitted, the demo derives one from the generated
+                                 worker secret for this run.
   PRIVATE_DEMO_SUBMISSION_DELAY_MS
                                  Simulation delay for task submission (default: ${DEFAULT_SUBMISSION_DELAY_MS})
   PRIVATE_DEMO_PAYLOAD_SIM_DELAY_MS
@@ -74,6 +78,27 @@ const DEMO_CONFIG = {
   submissionDelayMs: parseIntegerEnv('PRIVATE_DEMO_SUBMISSION_DELAY_MS', DEFAULT_SUBMISSION_DELAY_MS),
   payloadSimulationDelayMs: parseIntegerEnv('PRIVATE_DEMO_PAYLOAD_SIM_DELAY_MS', DEFAULT_PAYLOAD_SIM_DELAY_MS),
 };
+
+function deriveAgentSecret(worker: Keypair): bigint {
+  const digest = createHash('sha256')
+    .update(DEMO_AGENT_SECRET_DOMAIN)
+    .update(worker.secretKey)
+    .digest('hex');
+  return BigInt(`0x${digest}`);
+}
+
+function resolveAgentSecret(worker: Keypair): bigint {
+  const configured = process.env.PRIVATE_DEMO_AGENT_SECRET;
+  if (!configured) {
+    return deriveAgentSecret(worker);
+  }
+
+  try {
+    return BigInt(configured);
+  } catch {
+    throw new Error('PRIVATE_DEMO_AGENT_SECRET must be a valid bigint literal');
+  }
+}
 
 interface PrivatePayload {
   sealBytes: Buffer;
@@ -299,7 +324,14 @@ async function main() {
   console.log('-'.repeat(60));
 
   const output = [...DEMO_CONFIG.expectedOutput];
-  const hashes = computeHashes(taskPda, worker.publicKey, output, DEMO_CONFIG.salt);
+  const agentSecret = resolveAgentSecret(worker);
+  const hashes = computeHashes(
+    taskPda,
+    worker.publicKey,
+    output,
+    DEMO_CONFIG.salt,
+    agentSecret,
+  );
   const constraintHash = bigintToBytes32(hashes.constraintHash);
   const outputCommitment = bigintToBytes32(hashes.outputCommitment);
 

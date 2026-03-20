@@ -78,7 +78,7 @@ The SDK derives and submits the required verification accounts:
 ### Proof functions
 
 - `generateProof(params, proverConfig)` — generates a real RISC Zero proof via the remote prover service
-- `computeHashes(taskPda, agentPubkey, output, salt, agentSecret?)` — computes all hash fields without proof generation
+- `computeHashes(taskPda, agentPubkey, output, salt, agentSecret)` — computes all hash fields without proof generation
 - `generateSalt()` — generates a cryptographically random salt
 
 ### Task functions
