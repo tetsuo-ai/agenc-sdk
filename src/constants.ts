@@ -116,7 +116,7 @@ export const RECOMMENDED_CU_CREATE_TASK = 50_000;
 export const RECOMMENDED_CU_CREATE_DEPENDENT_TASK = 60_000;
 
 /** CU budget for claim_task instruction */
-export const RECOMMENDED_CU_CLAIM_TASK = 30_000;
+export const RECOMMENDED_CU_CLAIM_TASK = 45_000;
 
 /** CU budget for expire_claim instruction */
 export const RECOMMENDED_CU_EXPIRE_CLAIM = 40_000;

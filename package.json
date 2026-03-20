@@ -36,7 +36,11 @@
     "prepublishOnly": "npm run build",
     "test:devnet:deep": "AGENC_DEVNET_DRIFT_MODE=compat node scripts/devnet-integration-deep.mjs",
     "test:devnet:deep:strict": "AGENC_DEVNET_DRIFT_MODE=strict node scripts/devnet-integration-deep.mjs",
+    "test:devnet:disputes": "node scripts/devnet-disputes.mjs",
+    "test:devnet:governance": "node scripts/devnet-governance.mjs",
     "test:devnet:public": "node scripts/devnet-integration.mjs",
+    "test:devnet:reputation": "node scripts/devnet-reputation.mjs",
+    "test:devnet:skills": "node scripts/devnet-skills.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

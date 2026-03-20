@@ -166,15 +166,15 @@ function buildResolveTokenAccounts(
   creator: PublicKey,
   workerAuthority: PublicKey | null,
   treasury: PublicKey,
-): Record<string, PublicKey | undefined> {
+): Record<string, PublicKey | null> {
   if (!rewardMint) {
     return {
-      tokenEscrowAta: undefined,
-      creatorTokenAccount: undefined,
-      workerTokenAccountAta: undefined,
-      treasuryTokenAccount: undefined,
-      rewardMint: undefined,
-      tokenProgram: undefined,
+      tokenEscrowAta: null,
+      creatorTokenAccount: null,
+      workerTokenAccountAta: null,
+      treasuryTokenAccount: null,
+      rewardMint: null,
+      tokenProgram: null,
     };
   }
 
@@ -183,7 +183,7 @@ function buildResolveTokenAccounts(
     creatorTokenAccount: getAssociatedTokenAddressSync(rewardMint, creator),
     workerTokenAccountAta: workerAuthority
       ? getAssociatedTokenAddressSync(rewardMint, workerAuthority)
-      : undefined,
+      : null,
     treasuryTokenAccount: getAssociatedTokenAddressSync(rewardMint, treasury),
     rewardMint,
     tokenProgram: TOKEN_PROGRAM_ID,
@@ -195,14 +195,14 @@ function buildExpireTokenAccounts(
   escrowPda: PublicKey,
   creator: PublicKey,
   workerAuthority: PublicKey | null,
-): Record<string, PublicKey | undefined> {
+): Record<string, PublicKey | null> {
   if (!rewardMint) {
     return {
-      tokenEscrowAta: undefined,
-      creatorTokenAccount: undefined,
-      workerTokenAccountAta: undefined,
-      rewardMint: undefined,
-      tokenProgram: undefined,
+      tokenEscrowAta: null,
+      creatorTokenAccount: null,
+      workerTokenAccountAta: null,
+      rewardMint: null,
+      tokenProgram: null,
     };
   }
 
@@ -211,7 +211,7 @@ function buildExpireTokenAccounts(
     creatorTokenAccount: getAssociatedTokenAddressSync(rewardMint, creator),
     workerTokenAccountAta: workerAuthority
       ? getAssociatedTokenAddressSync(rewardMint, workerAuthority)
-      : undefined,
+      : null,
     rewardMint,
     tokenProgram: TOKEN_PROGRAM_ID,
   };
@@ -221,14 +221,14 @@ function buildApplySlashTokenAccounts(
   rewardMint: PublicKey | null,
   escrowPda: PublicKey,
   treasury: PublicKey,
-): Record<string, PublicKey | undefined> {
+): Record<string, PublicKey | null> {
   if (!rewardMint) {
     return {
-      escrow: undefined,
-      tokenEscrowAta: undefined,
-      treasuryTokenAccount: undefined,
-      rewardMint: undefined,
-      tokenProgram: undefined,
+      escrow: null,
+      tokenEscrowAta: null,
+      treasuryTokenAccount: null,
+      rewardMint: null,
+      tokenProgram: null,
     };
   }
 
@@ -239,6 +239,13 @@ function buildApplySlashTokenAccounts(
     rewardMint,
     tokenProgram: TOKEN_PROGRAM_ID,
   };
+}
+
+function asOptionalAccounts(
+  accounts: Record<string, PublicKey | null>,
+): Record<string, PublicKey | undefined> {
+  // Anchor accepts null for optional accounts at runtime, but its TS surface only allows undefined.
+  return accounts as unknown as Record<string, PublicKey | undefined>;
 }
 
 export function deriveDisputePda(
@@ -285,6 +292,12 @@ export async function initiateDispute(
     initiatorAgentPda,
     programId,
   );
+  const task = (await getAccount(program, "task").fetch(params.taskPda)) as {
+    creator: PublicKey;
+  };
+  const defaultInitiatorClaimPda = task.creator.equals(initiator.publicKey)
+    ? null
+    : derivedClaimPda;
 
   const builder = program.methods
     .initiateDispute(
@@ -293,20 +306,24 @@ export async function initiateDispute(
       Array.from(evidenceHash),
       params.resolutionType,
       params.evidence,
-    )
-    .accountsPartial({
+    );
+  const optionalAccounts = {
+    initiatorClaim:
+      params.initiatorClaimPda === undefined
+        ? defaultInitiatorClaimPda
+        : (params.initiatorClaimPda ?? null),
+    workerAgent: params.workerAgentPda ?? null,
+    workerClaim: params.workerClaimPda ?? null,
+  };
+
+  builder.accountsPartial({
       dispute: disputePda,
       task: params.taskPda,
       agent: initiatorAgentPda,
       protocolConfig: protocolPda,
-      initiatorClaim:
-        params.initiatorClaimPda === undefined
-          ? derivedClaimPda
-          : (params.initiatorClaimPda ?? undefined),
-      workerAgent: params.workerAgentPda ?? undefined,
-      workerClaim: params.workerClaimPda ?? undefined,
       authority: initiator.publicKey,
       systemProgram: SystemProgram.programId,
+      ...asOptionalAccounts(optionalAccounts),
     })
     .signers([initiator]);
 
@@ -350,14 +367,16 @@ export async function voteDispute(
     .accountsPartial({
       dispute: params.disputePda,
       task: params.taskPda,
-      workerClaim: params.workerClaimPda ?? undefined,
-      defendantAgent: params.defendantAgentPda ?? undefined,
       vote: votePda,
       authorityVote: authorityVotePda,
       arbiter: voterAgentPda,
       protocolConfig: protocolPda,
       authority: voter.publicKey,
       systemProgram: SystemProgram.programId,
+      ...asOptionalAccounts({
+        workerClaim: params.workerClaimPda ?? null,
+        defendantAgent: params.defendantAgentPda ?? null,
+      }),
     })
     .signers([voter])
     .rpc();
@@ -403,10 +422,12 @@ export async function resolveDispute(
       protocolConfig: protocolPda,
       authority: resolver.publicKey,
       creator: params.creatorPubkey,
-      workerClaim: params.workerClaimPda ?? undefined,
-      worker: params.workerAgentPda ?? undefined,
-      workerWallet: params.workerAuthority ?? undefined,
       systemProgram: SystemProgram.programId,
+      ...asOptionalAccounts({
+        workerClaim: params.workerClaimPda ?? null,
+        worker: params.workerAgentPda ?? null,
+        workerWallet: params.workerAuthority ?? null,
+      }),
       ...tokenAccounts,
     })
     .signers([resolver]);
@@ -559,9 +580,11 @@ export async function expireDispute(
       protocolConfig: protocolPda,
       creator: params.creatorPubkey,
       authority: caller.publicKey,
-      workerClaim: params.workerClaimPda ?? undefined,
-      worker: params.workerAgentPda ?? undefined,
-      workerWallet: params.workerAuthority ?? undefined,
+      ...asOptionalAccounts({
+        workerClaim: params.workerClaimPda ?? null,
+        worker: params.workerAgentPda ?? null,
+        workerWallet: params.workerAuthority ?? null,
+      }),
       ...tokenAccounts,
     })
     .signers([caller]);

@@ -80,6 +80,13 @@ function parseProposalStatus(raw: unknown): ProposalStatus {
   return ProposalStatus.Active;
 }
 
+function asOptionalAccounts(
+  accounts: Record<string, PublicKey | null>,
+): Record<string, PublicKey | undefined> {
+  // Anchor accepts null for optional accounts at runtime, but its TS surface only allows undefined.
+  return accounts as unknown as Record<string, PublicKey | undefined>;
+}
+
 // ============================================================================
 // PDA helpers
 // ============================================================================
@@ -250,20 +257,30 @@ export async function executeProposal(
 ): Promise<{ txSignature: string }> {
   const protocolPda = deriveProtocolPda(program.programId);
   const [governanceConfigPda] = deriveGovernanceConfigPda(program.programId);
+  const protocolConfig = (await getAccount(program, "protocolConfig").fetch(
+    protocolPda,
+  )) as {
+    treasury?: PublicKey;
+  };
 
-  const accounts: Record<string, PublicKey> = {
+  const baseAccounts: Record<string, PublicKey> = {
     proposal: proposalPda,
     protocolConfig: protocolPda,
     governanceConfig: governanceConfigPda,
     authority: executor.publicKey,
     systemProgram: SystemProgram.programId,
   };
-  if (treasury) accounts.treasury = treasury;
-  if (recipient) accounts.recipient = recipient;
+  const optionalAccounts = asOptionalAccounts({
+    treasury: treasury ?? protocolConfig.treasury ?? null,
+    recipient: recipient ?? null,
+  });
 
   const tx = await program.methods
     .executeProposal()
-    .accountsPartial(accounts)
+    .accountsPartial({
+      ...baseAccounts,
+      ...optionalAccounts,
+    })
     .signers([executor])
     .rpc();
 

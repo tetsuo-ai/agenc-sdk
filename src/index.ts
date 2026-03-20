@@ -160,6 +160,11 @@ export {
   RECOMMENDED_CU_COMPLETE_TASK_TOKEN,
   RECOMMENDED_CU_COMPLETE_TASK_PRIVATE_TOKEN,
   RECOMMENDED_CU_CANCEL_TASK_TOKEN,
+  // Reputation economy CU constants
+  RECOMMENDED_CU_STAKE_REPUTATION,
+  RECOMMENDED_CU_DELEGATE_REPUTATION,
+  RECOMMENDED_CU_WITHDRAW_REPUTATION_STAKE,
+  RECOMMENDED_CU_REVOKE_DELEGATION,
   // PDA seeds
   SEEDS,
 } from "./constants";
@@ -332,6 +337,13 @@ export {
   deriveSkillPda,
   deriveSkillRatingPda,
   deriveSkillPurchasePda,
+  registerSkill,
+  updateSkill,
+  rateSkill,
+  purchaseSkill,
+  getSkill,
+  getSkillRating,
+  getPurchaseRecord,
   RECOMMENDED_CU_REGISTER_SKILL,
   RECOMMENDED_CU_UPDATE_SKILL,
   RECOMMENDED_CU_RATE_SKILL,
@@ -344,6 +356,20 @@ export {
   type SkillRatingState,
   type PurchaseRecordState,
 } from "./skills";
+
+export {
+  deriveReputationStakePda,
+  deriveReputationDelegationPda,
+  stakeReputation,
+  withdrawReputationStake,
+  delegateReputation,
+  revokeDelegation,
+  getReputationStake,
+  getReputationDelegation,
+  type DelegateReputationParams,
+  type ReputationStakeState,
+  type ReputationDelegationState,
+} from "./reputation";
 
 export { PrivacyClient, type PrivacyClientConfig } from "./client";
 
