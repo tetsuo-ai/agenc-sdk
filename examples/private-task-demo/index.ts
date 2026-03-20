@@ -29,6 +29,7 @@ const NULLIFIER_SPEND_SEED = Buffer.from('nullifier_spend');
 const DEFAULT_OUTPUT = [1n, 2n, 3n, 4n] as const;
 const DEFAULT_TASK_ID = 1;
 const DEFAULT_SALT = 12345n;
+const DEFAULT_AGENT_SECRET = 987654321n; // Added to fix undefined parameter bug
 const DEFAULT_SUBMISSION_DELAY_MS = 500;
 const DEFAULT_PAYLOAD_SIM_DELAY_MS = 1200;
 
@@ -71,6 +72,7 @@ const DEMO_CONFIG = {
   expectedOutput: [...DEFAULT_OUTPUT] as bigint[],
   taskId: parseIntegerEnv('PRIVATE_DEMO_TASK_ID', DEFAULT_TASK_ID),
   salt: parseBigIntEnv('PRIVATE_DEMO_SALT', DEFAULT_SALT),
+  agentSecret: parseBigIntEnv('PRIVATE_DEMO_AGENT_SECRET', DEFAULT_AGENT_SECRET),
   submissionDelayMs: parseIntegerEnv('PRIVATE_DEMO_SUBMISSION_DELAY_MS', DEFAULT_SUBMISSION_DELAY_MS),
   payloadSimulationDelayMs: parseIntegerEnv('PRIVATE_DEMO_PAYLOAD_SIM_DELAY_MS', DEFAULT_PAYLOAD_SIM_DELAY_MS),
 };
@@ -298,8 +300,9 @@ async function main() {
   console.log('STEP 1: Create Task');
   console.log('-'.repeat(60));
 
-  const output = [...DEMO_CONFIG.expectedOutput];
-  const hashes = computeHashes(taskPda, worker.publicKey, output, DEMO_CONFIG.salt);
+  const output = DEMO_CONFIG.expectedOutput.map(n => BigInt(n));
+  const hashes = computeHashes(taskPda, worker.publicKey, output, DEMO_CONFIG.salt, DEMO_CONFIG.agentSecret);
+
   const constraintHash = bigintToBytes32(hashes.constraintHash);
   const outputCommitment = bigintToBytes32(hashes.outputCommitment);
 

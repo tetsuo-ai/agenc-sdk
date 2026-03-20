@@ -152,8 +152,11 @@ export function computeConstraintHash(output: bigint[]): bigint {
   return hashFieldElements(CONSTRAINT_HASH_DOMAIN_TAG, reduced);
 }
 
-function normalizeFieldElement(value: bigint): bigint {
-  return ((value % FIELD_MODULUS) + FIELD_MODULUS) % FIELD_MODULUS;
+function normalizeFieldElement(value: bigint | number): bigint {
+  // Accept both number and bigint to prevent "Cannot mix BigInt and other types"
+  // This makes the SDK more robust for demo and user code.
+  const asBigInt = typeof value === 'number' ? BigInt(value) : value;
+  return ((asBigInt % FIELD_MODULUS) + FIELD_MODULUS) % FIELD_MODULUS;
 }
 
 function normalizeOutput(output: bigint[]): bigint[] {
