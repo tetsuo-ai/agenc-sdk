@@ -17,13 +17,10 @@ const DEFAULT_REWARD = 10_000_000n;
 const COOLDOWN_BUFFER_SECONDS = 5;
 const DEFAULT_DRIFT_MODE = process.env.AGENC_DEVNET_DRIFT_MODE ?? "compat";
 
-const KNOWN_DEVNET_DRIFT = {
-  "register agent below min stake": "InsufficientFunds",
-  "create task with past deadline": "UpdateTooFrequent",
-  "reject self-claim by creator": "ProposalUnauthorizedCancel",
-  "reject complete without claim": "AccountNotInitialized",
-  "reject cancel after complete": "AccountNotInitialized",
-};
+// Keep the compat/strict switch in place, but there are currently no active
+// devnet allowances. Re-add entries here only when the deployed program is
+// verified to diverge from the local SDK/source expectations again.
+const KNOWN_DEVNET_DRIFT = {};
 
 function usage() {
   process.stdout.write(`Usage:
