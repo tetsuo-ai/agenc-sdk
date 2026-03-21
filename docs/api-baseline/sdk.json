@@ -1,7 +1,7 @@
 {
   "package": "@tetsuo-ai/sdk",
   "version": "1.3.1",
-  "generatedAt": "2026-03-17T01:49:56.790Z",
+  "generatedAt": "2026-03-21T13:55:39.039Z",
   "entryPoint": "src/index.ts",
   "exports": [
     {
@@ -98,7 +98,19 @@
     {
       "name": "cancelTask",
       "kind": "function",
-      "signature": "(connection: Connection, program: Program, creator: Keypair, taskPda: PublicKey, workerPairs?: Array<{ claimPda: PublicKey; workerAgentPda: PublicKey; }>): Promise<{ txSignature: string; }>"
+      "signature": "(connection: Connection, program: Program, creator: Keypair, taskPda: PublicKey, workerPairs?: Array<{ claimPda: PublicKey; workerAgentPda: PublicKey; }>, options?: CancelTaskOptions): Promise<{ txSignature: string; }>"
+    },
+    {
+      "name": "CancelTaskBidMarketplaceSettlement",
+      "kind": "interface"
+    },
+    {
+      "name": "CancelTaskOptions",
+      "kind": "interface"
+    },
+    {
+      "name": "CancelTaskWorkerCleanupTriple",
+      "kind": "interface"
     },
     {
       "name": "canonicalizeMarketplaceId",
@@ -118,12 +130,12 @@
     {
       "name": "completeTask",
       "kind": "function",
-      "signature": "(connection: Connection, program: Program, worker: Keypair, workerAgentId: Uint8Array | number[], taskPda: PublicKey, proofHash: Uint8Array | number[], resultData?: Uint8Array | number[] | null): Promise<{ txSignature: string; }>"
+      "signature": "(connection: Connection, program: Program, worker: Keypair, workerAgentId: Uint8Array | number[], taskPda: PublicKey, proofHash: Uint8Array | number[], resultData?: Uint8Array | number[] | null, options?: TaskCompletionOptions): Promise<{ txSignature: string; }>"
     },
     {
       "name": "completeTaskPrivate",
       "kind": "function",
-      "signature": "(connection: Connection, program: Program, worker: Keypair, workerAgentId: Uint8Array | number[], taskPda: PublicKey, proof: PrivateCompletionPayload): Promise<{ txSignature: string; }>"
+      "signature": "(connection: Connection, program: Program, worker: Keypair, workerAgentId: Uint8Array | number[], taskPda: PublicKey, proof: PrivateCompletionPayload, options?: TaskCompletionOptions): Promise<{ txSignature: string; }>"
     },
     {
       "name": "completeTaskPrivateSafe",
@@ -222,6 +234,15 @@
       "kind": "const"
     },
     {
+      "name": "delegateReputation",
+      "kind": "function",
+      "signature": "(connection: Connection, program: Program, authority: Keypair, delegatorAgentId: Uint8Array | number[], delegateeAgentId: Uint8Array | number[], params: DelegateReputationParams): Promise<{ delegationPda: PublicKey; txSignature: string; }>"
+    },
+    {
+      "name": "DelegateReputationParams",
+      "kind": "interface"
+    },
+    {
       "name": "DependentTask",
       "kind": "interface"
     },
@@ -273,6 +294,16 @@
       "name": "deriveProtocolPda",
       "kind": "function",
       "signature": "(programId?: PublicKey): PublicKey"
+    },
+    {
+      "name": "deriveReputationDelegationPda",
+      "kind": "function",
+      "signature": "(delegatorAgentPda: PublicKey, delegateeAgentPda: PublicKey, programId?: PublicKey): [PublicKey, number]"
+    },
+    {
+      "name": "deriveReputationStakePda",
+      "kind": "function",
+      "signature": "(agentPda: PublicKey, programId?: PublicKey): [PublicKey, number]"
     },
     {
       "name": "deriveSkillPda",
@@ -346,7 +377,15 @@
     {
       "name": "expireClaim",
       "kind": "function",
-      "signature": "(connection: Connection, program: Program, caller: Keypair, taskPda: PublicKey, workerAgentId: Uint8Array | number[], rentRecipient?: PublicKey): Promise<{ txSignature: string; }>"
+      "signature": "(connection: Connection, program: Program, caller: Keypair, taskPda: PublicKey, workerAgentId: Uint8Array | number[], rentRecipient?: PublicKey, options?: ExpireClaimOptions): Promise<{ txSignature: string; }>"
+    },
+    {
+      "name": "ExpireClaimBidMarketplaceSettlement",
+      "kind": "interface"
+    },
+    {
+      "name": "ExpireClaimOptions",
+      "kind": "interface"
     },
     {
       "name": "expireDispute",
@@ -455,9 +494,24 @@
       "signature": "(program: Program): Promise<ProtocolConfigState | null>"
     },
     {
+      "name": "getPurchaseRecord",
+      "kind": "function",
+      "signature": "(program: Program, purchaseRecordPda: PublicKey): Promise<PurchaseRecordState | null>"
+    },
+    {
       "name": "getReplayHealthCheck",
       "kind": "function",
       "signature": "(store: ReplayTimelineStoreLike, stalenessThresholdMs?: number): Promise<ReplayHealthCheck>"
+    },
+    {
+      "name": "getReputationDelegation",
+      "kind": "function",
+      "signature": "(program: Program, delegationPda: PublicKey): Promise<ReputationDelegationState | null>"
+    },
+    {
+      "name": "getReputationStake",
+      "kind": "function",
+      "signature": "(program: Program, reputationStakePda: PublicKey): Promise<ReputationStakeState | null>"
     },
     {
       "name": "getRootTasks",
@@ -468,6 +522,16 @@
       "name": "getSdkLogger",
       "kind": "function",
       "signature": "(): Logger"
+    },
+    {
+      "name": "getSkill",
+      "kind": "function",
+      "signature": "(program: Program, skillPda: PublicKey): Promise<SkillState | null>"
+    },
+    {
+      "name": "getSkillRating",
+      "kind": "function",
+      "signature": "(program: Program, ratingPda: PublicKey): Promise<SkillRatingState | null>"
     },
     {
       "name": "getState",
@@ -732,6 +796,16 @@
       "kind": "interface"
     },
     {
+      "name": "purchaseSkill",
+      "kind": "function",
+      "signature": "(connection: Connection, program: Program, buyer: Keypair, buyerAgentId: Uint8Array | number[], params: PurchaseSkillParams): Promise<{ purchaseRecordPda: PublicKey; txSignature: string; }>"
+    },
+    {
+      "name": "rateSkill",
+      "kind": "function",
+      "signature": "(connection: Connection, program: Program, authority: Keypair, raterAgentId: Uint8Array | number[], skillPda: PublicKey, params: RateSkillParams): Promise<{ ratingPda: PublicKey; txSignature: string; }>"
+    },
+    {
       "name": "RateSkillParams",
       "kind": "interface"
     },
@@ -793,6 +867,10 @@
       "kind": "const"
     },
     {
+      "name": "RECOMMENDED_CU_DELEGATE_REPUTATION",
+      "kind": "const"
+    },
+    {
       "name": "RECOMMENDED_CU_EXECUTE_PROPOSAL",
       "kind": "const"
     },
@@ -829,6 +907,14 @@
       "kind": "const"
     },
     {
+      "name": "RECOMMENDED_CU_REVOKE_DELEGATION",
+      "kind": "const"
+    },
+    {
+      "name": "RECOMMENDED_CU_STAKE_REPUTATION",
+      "kind": "const"
+    },
+    {
       "name": "RECOMMENDED_CU_UPDATE_AGENT",
       "kind": "const"
     },
@@ -845,6 +931,10 @@
       "kind": "const"
     },
     {
+      "name": "RECOMMENDED_CU_WITHDRAW_REPUTATION_STAKE",
+      "kind": "const"
+    },
+    {
       "name": "RecordedProcessIdentity",
       "kind": "interface"
     },
@@ -856,6 +946,11 @@
     {
       "name": "RegisterAgentParams",
       "kind": "interface"
+    },
+    {
+      "name": "registerSkill",
+      "kind": "function",
+      "signature": "(connection: Connection, program: Program, authority: Keypair, authorAgentId: Uint8Array | number[], params: RegisterSkillParams): Promise<{ skillPda: PublicKey; txSignature: string; }>"
     },
     {
       "name": "RegisterSkillParams",
@@ -882,6 +977,14 @@
       "kind": "interface"
     },
     {
+      "name": "ReputationDelegationState",
+      "kind": "interface"
+    },
+    {
+      "name": "ReputationStakeState",
+      "kind": "interface"
+    },
+    {
       "name": "requireVersionCompatibility",
       "kind": "function",
       "signature": "(program: Program, options?: VersionCompatibilityOptions): Promise<ProtocolVersionInfo>"
@@ -902,6 +1005,11 @@
     {
       "name": "RESULT_DATA_SIZE",
       "kind": "const"
+    },
+    {
+      "name": "revokeDelegation",
+      "kind": "function",
+      "signature": "(connection: Connection, program: Program, authority: Keypair, delegatorAgentId: Uint8Array | number[], delegateeAgentId: Uint8Array | number[]): Promise<{ delegationPda: PublicKey; txSignature: string; }>"
     },
     {
       "name": "RISC0_GROTH16_SEAL_LEN",
@@ -970,6 +1078,11 @@
       "kind": "interface"
     },
     {
+      "name": "stakeReputation",
+      "kind": "function",
+      "signature": "(connection: Connection, program: Program, authority: Keypair, agentId: Uint8Array | number[], amount: number | bigint): Promise<{ reputationStakePda: PublicKey; txSignature: string; }>"
+    },
+    {
       "name": "suspendAgent",
       "kind": "function",
       "signature": "(connection: Connection, program: Program, protocolAuthority: Keypair, agentId: Uint8Array | number[]): Promise<{ txSignature: string; }>"
@@ -996,6 +1109,14 @@
     },
     {
       "name": "TaskBidUpdateInput",
+      "kind": "interface"
+    },
+    {
+      "name": "TaskCompletionAcceptedBidSettlement",
+      "kind": "interface"
+    },
+    {
+      "name": "TaskCompletionOptions",
       "kind": "interface"
     },
     {
@@ -1110,6 +1231,11 @@
       "kind": "interface"
     },
     {
+      "name": "updateSkill",
+      "kind": "function",
+      "signature": "(connection: Connection, program: Program, authority: Keypair, authorAgentId: Uint8Array | number[], skillPda: PublicKey, params: UpdateSkillParams): Promise<{ txSignature: string; }>"
+    },
+    {
       "name": "UpdateSkillParams",
       "kind": "interface"
     },
@@ -1188,6 +1314,11 @@
     {
       "name": "WeightedScoringBreakdown",
       "kind": "interface"
+    },
+    {
+      "name": "withdrawReputationStake",
+      "kind": "function",
+      "signature": "(connection: Connection, program: Program, authority: Keypair, agentId: Uint8Array | number[], amount: number | bigint): Promise<{ txSignature: string; }>"
     },
     {
       "name": "ZkConfigState",

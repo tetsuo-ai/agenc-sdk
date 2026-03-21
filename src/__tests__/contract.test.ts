@@ -3,13 +3,17 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import {
   createTask,
   claimTask,
+  expireClaim,
   completeTask,
   completeTaskPrivate,
+  cancelTask,
   getTask,
   computeHashes,
   bigintToBytes32,
   buildJournalBytes,
   deriveTokenEscrowAddress,
+  resolveDispute,
+  expireDispute,
   getAssociatedTokenAddressSync,
 } from "../index.js";
 import { TaskState, PROGRAM_ID } from "../constants.js";
@@ -28,6 +32,7 @@ function makeKeypair(seed: number): Keypair {
 function makeProgram(methodNames: string[], rpcValue: string): unknown {
   const builder = {
     accountsPartial: vi.fn().mockReturnThis(),
+    remainingAccounts: vi.fn().mockReturnThis(),
     preInstructions: vi.fn().mockReturnThis(),
     signers: vi.fn().mockReturnThis(),
     rpc: vi.fn().mockResolvedValue(rpcValue),
@@ -59,6 +64,7 @@ const createPublicKeySeeded = (seed: number): PublicKey => {
 describe("SDK contract tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getAccount).mockReset();
   });
 
   it("returns stable contract for createTask", async () => {
@@ -113,6 +119,50 @@ describe("SDK contract tests", () => {
     expect(result.txSignature).toMatch(/\S+/);
   });
 
+  it("appends Marketplace V2 remaining accounts for expireClaim", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(["expireClaim"], "tx-expire-claim") as never;
+    const caller = makeKeypair(21);
+    const taskPda = createPublicKeySeeded(22);
+    const workerId = new Uint8Array(32);
+    workerId.fill(21);
+    const rentRecipient = createPublicKeySeeded(23);
+    const bidMarketplace = createPublicKeySeeded(24);
+    const bidBook = createPublicKeySeeded(25);
+    const acceptedBid = createPublicKeySeeded(26);
+    const bidderMarketState = createPublicKeySeeded(27);
+    const creator = createPublicKeySeeded(28);
+
+    const result = await expireClaim(
+      connection,
+      program as never,
+      caller,
+      taskPda,
+      workerId,
+      rentRecipient,
+      {
+        bidMarketplaceSettlement: {
+          bidMarketplace,
+          bidBook,
+          acceptedBid,
+          bidderMarketState,
+          creator,
+        },
+      },
+    );
+
+    expect(result).toEqual({ txSignature: "tx-expire-claim" });
+
+    const builder = (program as any).methods.expireClaim.mock.results[0].value;
+    expect(builder.remainingAccounts).toHaveBeenCalledWith([
+      { pubkey: bidMarketplace, isSigner: false, isWritable: false },
+      { pubkey: bidBook, isSigner: false, isWritable: true },
+      { pubkey: acceptedBid, isSigner: false, isWritable: true },
+      { pubkey: bidderMarketState, isSigner: false, isWritable: true },
+      { pubkey: creator, isSigner: false, isWritable: true },
+    ]);
+  });
+
   it("returns stable contract for completeTask", async () => {
     const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
     const program = makeProgram(["completeTask"], "tx-complete-task") as never;
@@ -140,6 +190,56 @@ describe("SDK contract tests", () => {
 
     expect(result).toEqual({ txSignature: "tx-complete-task" });
     expect(result.txSignature).toMatch(/\S+/);
+  });
+
+  it("appends proof dependency and accepted bid settlement for completeTask", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(["completeTask"], "tx-complete-task-v2") as never;
+    const worker = makeKeypair(31);
+    const taskPda = createPublicKeySeeded(32);
+    const workerId = new Uint8Array(32);
+    workerId.fill(31);
+    const parentTaskPda = createPublicKeySeeded(33);
+    const bidBook = createPublicKeySeeded(34);
+    const acceptedBid = createPublicKeySeeded(35);
+    const bidderMarketState = createPublicKeySeeded(36);
+    const bidderAuthority = createPublicKeySeeded(37);
+
+    mockGetAccount({
+      creator: createPublicKeySeeded(38),
+      rewardMint: null,
+    } as never);
+    mockGetAccount({
+      treasury: createPublicKeySeeded(39),
+    } as never);
+
+    await completeTask(
+      connection,
+      program as never,
+      worker,
+      workerId,
+      taskPda,
+      new Uint8Array(32),
+      undefined,
+      {
+        parentTaskPda,
+        acceptedBidSettlement: {
+          bidBook,
+          acceptedBid,
+          bidderMarketState,
+        },
+        bidderAuthority,
+      },
+    );
+
+    const builder = (program as any).methods.completeTask.mock.results[0].value;
+    expect(builder.remainingAccounts).toHaveBeenCalledWith([
+      { pubkey: parentTaskPda, isSigner: false, isWritable: false },
+      { pubkey: bidBook, isSigner: false, isWritable: true },
+      { pubkey: acceptedBid, isSigner: false, isWritable: true },
+      { pubkey: bidderMarketState, isSigner: false, isWritable: true },
+      { pubkey: bidderAuthority, isSigner: false, isWritable: true },
+    ]);
   });
 
   it("returns stable contract for completeTaskPrivate with router accounts", async () => {
@@ -245,6 +345,214 @@ describe("SDK contract tests", () => {
         verifierProgram: expect.any(PublicKey),
       }),
     );
+  });
+
+  it("appends Marketplace V2 remaining accounts for completeTaskPrivate", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(
+      ["completeTaskPrivate"],
+      "tx-complete-task-private-v2",
+    ) as never;
+    const worker = makeKeypair(41);
+    const taskPda = createPublicKeySeeded(42);
+    const workerId = new Uint8Array(32);
+    workerId.fill(41);
+    const parentTaskPda = createPublicKeySeeded(43);
+    const bidBook = createPublicKeySeeded(44);
+    const acceptedBid = createPublicKeySeeded(45);
+    const bidderMarketState = createPublicKeySeeded(46);
+    const bidderAuthority = createPublicKeySeeded(47);
+
+    const taskId = new Uint8Array(32);
+    taskId.fill(48);
+    mockGetAccount({
+      creator: createPublicKeySeeded(49),
+      taskId,
+      rewardMint: null,
+    } as never);
+    mockGetAccount({
+      treasury: createPublicKeySeeded(50),
+    } as never);
+    mockGetAccount({
+      activeImageId: Buffer.alloc(32, 0xaa),
+    } as never);
+
+    const sealBytes = Buffer.alloc(260, 0xaa);
+    sealBytes[0] = 0x52;
+    sealBytes[1] = 0x5a;
+    sealBytes[2] = 0x56;
+    sealBytes[3] = 0x4d;
+
+    await completeTaskPrivate(
+      connection,
+      program as never,
+      worker,
+      workerId,
+      taskPda,
+      {
+        sealBytes,
+        journal: Buffer.alloc(192, 0xbb),
+        imageId: Buffer.alloc(32, 0xaa),
+        bindingSeed: Buffer.alloc(32, 0xcc),
+        nullifierSeed: Buffer.alloc(32, 0xdd),
+      },
+      {
+        parentTaskPda,
+        acceptedBidSettlement: {
+          bidBook,
+          acceptedBid,
+          bidderMarketState,
+        },
+        bidderAuthority,
+      },
+    );
+
+    const builder = (program as any).methods.completeTaskPrivate.mock.results[0]
+      .value;
+    expect(builder.remainingAccounts).toHaveBeenCalledWith([
+      { pubkey: parentTaskPda, isSigner: false, isWritable: false },
+      { pubkey: bidBook, isSigner: false, isWritable: true },
+      { pubkey: acceptedBid, isSigner: false, isWritable: true },
+      { pubkey: bidderMarketState, isSigner: false, isWritable: true },
+      { pubkey: bidderAuthority, isSigner: false, isWritable: true },
+    ]);
+  });
+
+  it("appends Marketplace V2 cleanup accounts for cancelTask", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(["cancelTask"], "tx-cancel-task-v2") as never;
+    const creator = makeKeypair(51);
+    const taskPda = createPublicKeySeeded(52);
+    const claimPda = createPublicKeySeeded(53);
+    const workerAgentPda = createPublicKeySeeded(54);
+    const rentRecipient = createPublicKeySeeded(55);
+    const bidBook = createPublicKeySeeded(56);
+    const acceptedBid = createPublicKeySeeded(57);
+    const bidderMarketState = createPublicKeySeeded(58);
+
+    mockGetAccount({
+      rewardMint: null,
+    } as never);
+
+    const result = await cancelTask(
+      connection,
+      program as never,
+      creator,
+      taskPda,
+      undefined,
+      {
+        workerCleanupTriples: [
+          { claimPda, workerAgentPda, rentRecipient },
+        ],
+        bidMarketplaceSettlement: {
+          bidBook,
+          acceptedBid,
+          bidderMarketState,
+        },
+      },
+    );
+
+    expect(result).toEqual({ txSignature: "tx-cancel-task-v2" });
+
+    const builder = (program as any).methods.cancelTask.mock.results[0].value;
+    expect(builder.remainingAccounts).toHaveBeenCalledWith([
+      { pubkey: claimPda, isSigner: false, isWritable: true },
+      { pubkey: workerAgentPda, isSigner: false, isWritable: true },
+      { pubkey: rentRecipient, isSigner: false, isWritable: true },
+      { pubkey: bidBook, isSigner: false, isWritable: true },
+      { pubkey: acceptedBid, isSigner: false, isWritable: true },
+      { pubkey: bidderMarketState, isSigner: false, isWritable: true },
+    ]);
+  });
+
+  it("appends accepted bid settlement suffix for resolveDispute", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(["resolveDispute"], "tx-resolve-dispute") as never;
+    const resolver = makeKeypair(61);
+    const taskPda = createPublicKeySeeded(62);
+    const disputePda = createPublicKeySeeded(63);
+    const creatorPubkey = createPublicKeySeeded(64);
+    const bidBook = createPublicKeySeeded(65);
+    const acceptedBid = createPublicKeySeeded(66);
+    const bidderMarketState = createPublicKeySeeded(67);
+
+    mockGetAccount({
+      rewardMint: null,
+    } as never);
+    mockGetAccount({
+      treasury: createPublicKeySeeded(68),
+    } as never);
+
+    const result = await resolveDispute(
+      connection,
+      program as never,
+      resolver,
+      {
+        disputePda,
+        taskPda,
+        creatorPubkey,
+        acceptedBidSettlement: {
+          bidBook,
+          acceptedBid,
+          bidderMarketState,
+        },
+      },
+    );
+
+    expect(result).toEqual({ txSignature: "tx-resolve-dispute" });
+
+    const builder = (program as any).methods.resolveDispute.mock.results[0]
+      .value;
+    expect(builder.remainingAccounts).toHaveBeenCalledWith([
+      { pubkey: bidBook, isSigner: false, isWritable: true },
+      { pubkey: acceptedBid, isSigner: false, isWritable: true },
+      { pubkey: bidderMarketState, isSigner: false, isWritable: true },
+    ]);
+  });
+
+  it("appends accepted bid settlement suffix for expireDispute", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(["expireDispute"], "tx-expire-dispute") as never;
+    const resolver = makeKeypair(71);
+    const taskPda = createPublicKeySeeded(72);
+    const disputePda = createPublicKeySeeded(73);
+    const creatorPubkey = createPublicKeySeeded(74);
+    const bidBook = createPublicKeySeeded(75);
+    const acceptedBid = createPublicKeySeeded(76);
+    const bidderMarketState = createPublicKeySeeded(77);
+
+    mockGetAccount({
+      rewardMint: null,
+    } as never);
+    mockGetAccount({
+      treasury: createPublicKeySeeded(78),
+    } as never);
+
+    const result = await expireDispute(
+      connection,
+      program as never,
+      resolver,
+      {
+        disputePda,
+        taskPda,
+        creatorPubkey,
+        acceptedBidSettlement: {
+          bidBook,
+          acceptedBid,
+          bidderMarketState,
+        },
+      },
+    );
+
+    expect(result).toEqual({ txSignature: "tx-expire-dispute" });
+
+    const builder = (program as any).methods.expireDispute.mock.results[0]
+      .value;
+    expect(builder.remainingAccounts).toHaveBeenCalledWith([
+      { pubkey: bidBook, isSigner: false, isWritable: true },
+      { pubkey: acceptedBid, isSigner: false, isWritable: true },
+      { pubkey: bidderMarketState, isSigner: false, isWritable: true },
+    ]);
   });
 
   it("returns stable TaskStatus contract for getTask", async () => {

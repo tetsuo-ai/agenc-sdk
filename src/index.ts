@@ -58,6 +58,13 @@ export {
   TaskLifecycleEvent,
   TaskLifecycleSummary,
   PrivateCompletionPayload,
+  TaskCompletionAcceptedBidSettlement,
+  TaskCompletionOptions,
+  ExpireClaimBidMarketplaceSettlement,
+  ExpireClaimOptions,
+  CancelTaskWorkerCleanupTriple,
+  CancelTaskBidMarketplaceSettlement,
+  CancelTaskOptions,
   CompleteTaskPrivateSafeOptions,
   ProofPreconditionError,
 } from "./tasks";
