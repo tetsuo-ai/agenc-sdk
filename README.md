@@ -180,6 +180,24 @@ Funding notes:
 - `test:devnet:reputation`: the delegator needs agent stake plus
   `AGENC_REPUTATION_STAKE_LAMPORTS`; the delegatee needs enough SOL to register.
 
+### Deep public task flow
+
+```bash
+CREATOR_WALLET=/path/to/creator.json \
+WORKER_WALLET=/path/to/worker.json \
+npm run test:devnet:deep:strict
+```
+
+Optional:
+
+- `AGENC_DEVNET_DRIFT_MODE`
+
+This validates the public deep task lifecycle and the key negative paths:
+minimum-stake registration, past-deadline create, self-claim rejection,
+complete-without-claim, cancel-after-complete, and the final completed task
+state. As of March 21, 2026, the strict suite passes on devnet. The current
+status is tracked in `docs/devnet-compatibility.md`.
+
 ### Skills flow
 
 ```bash
