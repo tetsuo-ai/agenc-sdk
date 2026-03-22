@@ -102,11 +102,15 @@ async function resume() {
   const artifact = await readArtifact(resumePath);
   const rpcUrl = process.env.AGENC_RPC_URL ?? artifact.rpcUrl ?? DEFAULT_RPC_URL;
   const idlPath = resolveIdlPath(artifact.idlPath ?? null);
+  const maxWaitSeconds = Number(
+    process.env.AGENC_MAX_WAIT_SECONDS ?? DEFAULT_MAX_WAIT_SECONDS,
+  );
 
   console.log(`[resume] artifact: ${resumePath}`);
   console.log(`[resume] rpc: ${rpcUrl}`);
   console.log(`[resume] idl path: ${idlPath}`);
   console.log(`[resume] authority wallet: ${authorityWalletPath}`);
+  console.log(`[resume] max wait seconds: ${maxWaitSeconds}`);
 
   const { connection, keypairs, programs } = await loadPrograms({
     rpcUrl,
@@ -129,15 +133,27 @@ async function resume() {
   }
 
   const disputePda = new PublicKey(artifact.disputePda);
-  const disputeBefore = await sdk.getDispute(authorityProgram, disputePda);
+  let disputeBefore = await sdk.getDispute(authorityProgram, disputePda);
   if (!disputeBefore) {
     throw new Error(`Dispute ${artifact.disputePda} no longer exists.`);
   }
   if (Date.now() / 1000 < disputeBefore.votingDeadline) {
-    console.log(
-      `[resume] dispute still locked until ${formatUnix(disputeBefore.votingDeadline)}. Re-run after that time.`,
+    const ready = await waitUntilUnix(
+      disputeBefore.votingDeadline,
+      "dispute resume",
+      maxWaitSeconds,
     );
-    return;
+    if (!ready) {
+      console.log(
+        `[resume] dispute still locked until ${formatUnix(disputeBefore.votingDeadline)}. Re-run after that time.`,
+      );
+      return;
+    }
+
+    disputeBefore = await sdk.getDispute(authorityProgram, disputePda);
+    if (!disputeBefore) {
+      throw new Error(`Dispute ${artifact.disputePda} disappeared after waiting.`);
+    }
   }
 
   if (disputeBefore.status !== sdk.DisputeStatus.Active) {
