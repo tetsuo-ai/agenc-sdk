@@ -36,9 +36,11 @@ const ERROR_CATEGORIES = [
 
 const CATEGORY_BY_PREFIX = [
   ["Agent", "agent"],
+  ["Bid", "task"],
   ["Task", "task"],
   ["Claim", "claim"],
   ["InvalidProof", "claim"],
+  ["InvalidBid", "task"],
   ["InvalidJournal", "claim"],
   ["Dispute", "dispute"],
   ["State", "state"],
@@ -73,6 +75,8 @@ const CATEGORY_BY_NAME = new Map([
   ["InvalidTaskType", "task"],
   ["InvalidDeadline", "task"],
   ["InvalidReward", "task"],
+  ["InvalidMatchingPolicy", "task"],
+  ["InvalidWeightedScoreWeights", "task"],
   ["InvalidRequiredCapabilities", "task"],
   ["CompetitiveTaskAlreadyWon", "task"],
   ["NoWorkers", "task"],

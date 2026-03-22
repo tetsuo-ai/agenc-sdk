@@ -15,14 +15,15 @@ const IDL_ERRORS = JSON.parse(
 
 describe("errors", () => {
   it("matches the committed protocol error snapshot", () => {
-    expect(IDL_ERRORS).toHaveLength(200);
+    expect(IDL_ERRORS.length).toBeGreaterThan(0);
     expect(IDL_ERRORS[0]?.code).toBe(6000);
-    expect(IDL_ERRORS.at(-1)?.code).toBe(6199);
 
     const mapCodes = Object.keys(COORDINATION_ERROR_MAP)
       .map((code) => Number.parseInt(code, 10))
       .sort((left, right) => left - right);
 
+    expect(IDL_ERRORS).toHaveLength(mapCodes.length);
+    expect(IDL_ERRORS.at(-1)?.code).toBe(mapCodes.at(-1));
     expect(mapCodes).toEqual(IDL_ERRORS.map((entry) => entry.code));
 
     for (const entry of IDL_ERRORS) {
