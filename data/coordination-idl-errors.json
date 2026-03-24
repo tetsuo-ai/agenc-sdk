@@ -141,861 +141,946 @@
   },
   {
     "code": 6028,
+    "name": "TaskNotBidExclusive",
+    "message": "Task is not a Marketplace V2 bid-exclusive task"
+  },
+  {
+    "code": 6029,
+    "name": "BidExclusiveRequiresSingleWorker",
+    "message": "Bid-exclusive tasks must use max_workers = 1"
+  },
+  {
+    "code": 6030,
+    "name": "BidTaskSolOnly",
+    "message": "Marketplace V2 bid tasks are SOL-only in v2"
+  },
+  {
+    "code": 6031,
+    "name": "BidTaskRequiresAcceptance",
+    "message": "Bid-exclusive tasks require bid acceptance and cannot be claimed directly"
+  },
+  {
+    "code": 6032,
+    "name": "BidBookNotOpen",
+    "message": "Bid book is not open"
+  },
+  {
+    "code": 6033,
+    "name": "BidBookNotAccepted",
+    "message": "Bid book is not in accepted state"
+  },
+  {
+    "code": 6034,
+    "name": "BidSettlementAccountsRequired",
+    "message": "Bid settlement accounts are required"
+  },
+  {
+    "code": 6035,
+    "name": "BidPriceExceedsTaskBudget",
+    "message": "Bid price exceeds task budget"
+  },
+  {
+    "code": 6036,
+    "name": "InvalidBidExpiry",
+    "message": "Bid expiry is invalid"
+  },
+  {
+    "code": 6037,
+    "name": "InvalidBidEta",
+    "message": "Bid ETA must be greater than zero"
+  },
+  {
+    "code": 6038,
+    "name": "InvalidBidConfidence",
+    "message": "Bid confidence must be between 0 and 10000 basis points"
+  },
+  {
+    "code": 6039,
+    "name": "InvalidMatchingPolicy",
+    "message": "Invalid matching policy"
+  },
+  {
+    "code": 6040,
+    "name": "InvalidWeightedScoreWeights",
+    "message": "Weighted score weights must sum to 10000 basis points"
+  },
+  {
+    "code": 6041,
+    "name": "BidNotActive",
+    "message": "Bid is not active"
+  },
+  {
+    "code": 6042,
+    "name": "BidAlreadyAccepted",
+    "message": "Bid has already been accepted"
+  },
+  {
+    "code": 6043,
+    "name": "BidNotExpired",
+    "message": "Bid has not expired and bid book is not closed"
+  },
+  {
+    "code": 6044,
+    "name": "BidBookCapacityReached",
+    "message": "Bid book has reached its active bid capacity"
+  },
+  {
+    "code": 6045,
     "name": "InvalidDeadline",
     "message": "Invalid deadline: deadline must be greater than zero"
   },
   {
-    "code": 6029,
+    "code": 6046,
     "name": "InvalidReward",
     "message": "Invalid reward: reward must be greater than zero"
   },
   {
-    "code": 6030,
+    "code": 6047,
     "name": "InvalidRequiredCapabilities",
     "message": "Invalid required capabilities: required_capabilities cannot be zero"
   },
   {
-    "code": 6031,
+    "code": 6048,
     "name": "CompetitiveTaskAlreadyWon",
     "message": "Competitive task already completed by another worker"
   },
   {
-    "code": 6032,
+    "code": 6049,
     "name": "NoWorkers",
     "message": "Task has no workers"
   },
   {
-    "code": 6033,
+    "code": 6050,
     "name": "ConstraintHashMismatch",
     "message": "Proof constraint hash does not match task's stored constraint hash"
   },
   {
-    "code": 6034,
+    "code": 6051,
     "name": "NotPrivateTask",
     "message": "Task is not a private task (no constraint hash set)"
   },
   {
-    "code": 6035,
+    "code": 6052,
     "name": "AlreadyClaimed",
     "message": "Worker has already claimed this task"
   },
   {
-    "code": 6036,
+    "code": 6053,
     "name": "NotClaimed",
     "message": "Worker has not claimed this task"
   },
   {
-    "code": 6037,
+    "code": 6054,
     "name": "ClaimAlreadyCompleted",
     "message": "Claim has already been completed"
   },
   {
-    "code": 6038,
+    "code": 6055,
     "name": "ClaimNotExpired",
     "message": "Claim has not expired yet"
   },
   {
-    "code": 6039,
+    "code": 6056,
     "name": "ClaimExpired",
     "message": "Claim has expired"
   },
   {
-    "code": 6040,
+    "code": 6057,
     "name": "InvalidExpiration",
     "message": "Invalid expiration: expires_at cannot be zero"
   },
   {
-    "code": 6041,
+    "code": 6058,
     "name": "InvalidProof",
     "message": "Invalid proof of work"
   },
   {
-    "code": 6042,
+    "code": 6059,
     "name": "ZkVerificationFailed",
     "message": "ZK proof verification failed"
   },
   {
-    "code": 6043,
+    "code": 6060,
     "name": "InvalidSealEncoding",
     "message": "Invalid RISC0 seal encoding"
   },
   {
-    "code": 6044,
+    "code": 6061,
     "name": "InvalidJournalLength",
     "message": "Invalid RISC0 journal length"
   },
   {
-    "code": 6045,
+    "code": 6062,
     "name": "InvalidJournalBinding",
     "message": "Invalid RISC0 journal binding"
   },
   {
-    "code": 6046,
+    "code": 6063,
     "name": "InvalidJournalTask",
     "message": "RISC0 journal task binding mismatch"
   },
   {
-    "code": 6047,
+    "code": 6064,
     "name": "InvalidJournalAuthority",
     "message": "RISC0 journal authority binding mismatch"
   },
   {
-    "code": 6048,
+    "code": 6065,
     "name": "InvalidImageId",
     "message": "Invalid RISC0 image ID"
   },
   {
-    "code": 6049,
+    "code": 6066,
     "name": "TrustedSelectorMismatch",
     "message": "RISC0 seal selector does not match trusted selector"
   },
   {
-    "code": 6050,
+    "code": 6067,
     "name": "TrustedVerifierProgramMismatch",
     "message": "RISC0 verifier program does not match trusted verifier"
   },
   {
-    "code": 6051,
+    "code": 6068,
     "name": "RouterAccountMismatch",
     "message": "RISC0 router account constraints failed"
   },
   {
-    "code": 6052,
+    "code": 6069,
     "name": "InvalidProofSize",
     "message": "Invalid proof size - expected 256 bytes for RISC Zero seal body"
   },
   {
-    "code": 6053,
+    "code": 6070,
     "name": "InvalidProofBinding",
     "message": "Invalid proof binding: expected_binding cannot be all zeros"
   },
   {
-    "code": 6054,
+    "code": 6071,
     "name": "InvalidOutputCommitment",
     "message": "Invalid output commitment: output_commitment cannot be all zeros"
   },
   {
-    "code": 6055,
+    "code": 6072,
     "name": "InvalidRentRecipient",
     "message": "Invalid rent recipient: must be worker authority"
   },
   {
-    "code": 6056,
+    "code": 6073,
     "name": "GracePeriodNotPassed",
     "message": "Grace period not passed: only worker authority can expire claim within 60 seconds of expiry"
   },
   {
-    "code": 6057,
+    "code": 6074,
     "name": "InvalidProofHash",
     "message": "Invalid proof hash: proof_hash cannot be all zeros"
   },
   {
-    "code": 6058,
+    "code": 6075,
     "name": "InvalidResultData",
     "message": "Invalid result data: result_data cannot be all zeros when provided"
   },
   {
-    "code": 6059,
+    "code": 6076,
     "name": "DisputeNotActive",
     "message": "Dispute is not active"
   },
   {
-    "code": 6060,
+    "code": 6077,
     "name": "VotingEnded",
     "message": "Voting period has ended"
   },
   {
-    "code": 6061,
+    "code": 6078,
     "name": "VotingNotEnded",
     "message": "Voting period has not ended"
   },
   {
-    "code": 6062,
+    "code": 6079,
     "name": "AlreadyVoted",
     "message": "Already voted on this dispute"
   },
   {
-    "code": 6063,
+    "code": 6080,
     "name": "NotArbiter",
     "message": "Not authorized to vote (not an arbiter)"
   },
   {
-    "code": 6064,
+    "code": 6081,
     "name": "InsufficientVotes",
     "message": "Insufficient votes to resolve"
   },
   {
-    "code": 6065,
+    "code": 6082,
     "name": "DisputeAlreadyResolved",
     "message": "Dispute has already been resolved"
   },
   {
-    "code": 6066,
+    "code": 6083,
     "name": "UnauthorizedResolver",
     "message": "Only protocol authority or dispute initiator can resolve disputes"
   },
   {
-    "code": 6067,
+    "code": 6084,
     "name": "ActiveDisputeVotes",
     "message": "Agent has active dispute votes pending resolution"
   },
   {
-    "code": 6068,
+    "code": 6085,
     "name": "RecentVoteActivity",
     "message": "Agent must wait 24 hours after voting before deregistering"
   },
   {
-    "code": 6069,
+    "code": 6086,
     "name": "AuthorityAlreadyVoted",
     "message": "Authority has already voted on this dispute"
   },
   {
-    "code": 6070,
+    "code": 6087,
     "name": "InsufficientEvidence",
     "message": "Insufficient dispute evidence provided"
   },
   {
-    "code": 6071,
+    "code": 6088,
     "name": "EvidenceTooLong",
     "message": "Dispute evidence exceeds maximum allowed length"
   },
   {
-    "code": 6072,
+    "code": 6089,
     "name": "DisputeNotExpired",
     "message": "Dispute has not expired"
   },
   {
-    "code": 6073,
+    "code": 6090,
     "name": "SlashAlreadyApplied",
     "message": "Dispute slashing already applied"
   },
   {
-    "code": 6074,
+    "code": 6091,
     "name": "SlashWindowExpired",
     "message": "Slash window expired: must apply slashing within 7 days of resolution"
   },
   {
-    "code": 6075,
+    "code": 6092,
     "name": "DisputeNotResolved",
     "message": "Dispute has not been resolved"
   },
   {
-    "code": 6076,
+    "code": 6093,
     "name": "NotTaskParticipant",
     "message": "Only task creator or workers can initiate disputes"
   },
   {
-    "code": 6077,
+    "code": 6094,
     "name": "InvalidEvidenceHash",
     "message": "Invalid evidence hash: cannot be all zeros"
   },
   {
-    "code": 6078,
+    "code": 6095,
     "name": "ArbiterIsDisputeParticipant",
     "message": "Arbiter cannot vote on disputes they are a participant in"
   },
   {
-    "code": 6079,
+    "code": 6096,
     "name": "InsufficientQuorum",
     "message": "Insufficient quorum: minimum number of voters not reached"
   },
   {
-    "code": 6080,
+    "code": 6097,
     "name": "ActiveDisputesExist",
     "message": "Agent has active disputes as defendant and cannot deregister"
   },
   {
-    "code": 6081,
+    "code": 6098,
     "name": "TooManyDisputeVoters",
     "message": "Dispute has reached maximum voter capacity"
   },
   {
-    "code": 6082,
+    "code": 6099,
     "name": "WorkerAgentRequired",
     "message": "Worker agent account required when creator initiates dispute"
   },
   {
-    "code": 6083,
+    "code": 6100,
     "name": "WorkerClaimRequired",
     "message": "Worker claim account required when creator initiates dispute"
   },
   {
-    "code": 6084,
+    "code": 6101,
     "name": "WorkerNotInDispute",
     "message": "Worker was not involved in this dispute"
   },
   {
-    "code": 6085,
+    "code": 6102,
     "name": "InitiatorCannotResolve",
     "message": "Dispute initiator cannot resolve their own dispute"
   },
   {
-    "code": 6086,
+    "code": 6103,
     "name": "VersionMismatch",
     "message": "State version mismatch (concurrent modification)"
   },
   {
-    "code": 6087,
+    "code": 6104,
     "name": "StateKeyExists",
     "message": "State key already exists"
   },
   {
-    "code": 6088,
+    "code": 6105,
     "name": "StateNotFound",
     "message": "State not found"
   },
   {
-    "code": 6089,
+    "code": 6106,
     "name": "InvalidStateValue",
     "message": "Invalid state value: state_value cannot be all zeros"
   },
   {
-    "code": 6090,
+    "code": 6107,
     "name": "StateOwnershipViolation",
     "message": "State ownership violation: only the creator agent can update this state"
   },
   {
-    "code": 6091,
+    "code": 6108,
     "name": "InvalidStateKey",
     "message": "Invalid state key: state_key cannot be all zeros"
   },
   {
-    "code": 6092,
+    "code": 6109,
     "name": "ProtocolAlreadyInitialized",
     "message": "Protocol is already initialized"
   },
   {
-    "code": 6093,
+    "code": 6110,
     "name": "ProtocolNotInitialized",
     "message": "Protocol is not initialized"
   },
   {
-    "code": 6094,
+    "code": 6111,
     "name": "InvalidProtocolFee",
     "message": "Invalid protocol fee (must be <= 1000 bps)"
   },
   {
-    "code": 6095,
+    "code": 6112,
     "name": "InvalidTreasury",
     "message": "Invalid treasury: treasury account cannot be default pubkey"
   },
   {
-    "code": 6096,
+    "code": 6113,
     "name": "InvalidDisputeThreshold",
     "message": "Invalid dispute threshold: must be 1-100 (percentage of votes required)"
   },
   {
-    "code": 6097,
+    "code": 6114,
     "name": "InsufficientStake",
     "message": "Insufficient stake for arbiter registration"
   },
   {
-    "code": 6098,
+    "code": 6115,
     "name": "MultisigInvalidThreshold",
     "message": "Invalid multisig threshold"
   },
   {
-    "code": 6099,
+    "code": 6116,
     "name": "MultisigInvalidSigners",
     "message": "Invalid multisig signer configuration"
   },
   {
-    "code": 6100,
+    "code": 6117,
     "name": "MultisigNotEnoughSigners",
     "message": "Not enough multisig signers"
   },
   {
-    "code": 6101,
+    "code": 6118,
     "name": "MultisigDuplicateSigner",
     "message": "Duplicate multisig signer provided"
   },
   {
-    "code": 6102,
+    "code": 6119,
     "name": "MultisigDefaultSigner",
     "message": "Multisig signer cannot be default pubkey"
   },
   {
-    "code": 6103,
+    "code": 6120,
     "name": "MultisigSignerNotSystemOwned",
     "message": "Multisig signer account not owned by System Program"
   },
   {
-    "code": 6104,
+    "code": 6121,
     "name": "InvalidInput",
     "message": "Invalid input parameter"
   },
   {
-    "code": 6105,
+    "code": 6122,
     "name": "ArithmeticOverflow",
     "message": "Arithmetic overflow"
   },
   {
-    "code": 6106,
+    "code": 6123,
     "name": "VoteOverflow",
     "message": "Vote count overflow"
   },
   {
-    "code": 6107,
+    "code": 6124,
     "name": "InsufficientFunds",
     "message": "Insufficient funds"
   },
   {
-    "code": 6108,
+    "code": 6125,
     "name": "RewardTooSmall",
     "message": "Reward too small: worker must receive at least 1 lamport"
   },
   {
-    "code": 6109,
+    "code": 6126,
     "name": "CorruptedData",
     "message": "Account data is corrupted"
   },
   {
-    "code": 6110,
+    "code": 6127,
     "name": "StringTooLong",
     "message": "String too long"
   },
   {
-    "code": 6111,
+    "code": 6128,
     "name": "InvalidAccountOwner",
     "message": "Account owner validation failed: account not owned by this program"
   },
   {
-    "code": 6112,
+    "code": 6129,
     "name": "RateLimitExceeded",
     "message": "Rate limit exceeded: maximum actions per 24h window reached"
   },
   {
-    "code": 6113,
+    "code": 6130,
     "name": "CooldownNotElapsed",
     "message": "Cooldown period has not elapsed since last action"
   },
   {
-    "code": 6114,
+    "code": 6131,
     "name": "UpdateTooFrequent",
     "message": "Agent update too frequent: must wait cooldown period"
   },
   {
-    "code": 6115,
+    "code": 6132,
     "name": "InvalidCooldown",
     "message": "Cooldown value cannot be negative"
   },
   {
-    "code": 6116,
+    "code": 6133,
     "name": "CooldownTooLarge",
     "message": "Cooldown value exceeds maximum (24 hours)"
   },
   {
-    "code": 6117,
+    "code": 6134,
     "name": "RateLimitTooHigh",
     "message": "Rate limit value exceeds maximum allowed (1000)"
   },
   {
-    "code": 6118,
+    "code": 6135,
     "name": "CooldownTooLong",
     "message": "Cooldown value exceeds maximum allowed (1 week)"
   },
   {
-    "code": 6119,
+    "code": 6136,
     "name": "InsufficientStakeForDispute",
     "message": "Insufficient stake to initiate dispute"
   },
   {
-    "code": 6120,
+    "code": 6137,
     "name": "InsufficientStakeForCreatorDispute",
     "message": "Creator-initiated disputes require 2x the minimum stake"
   },
   {
-    "code": 6121,
+    "code": 6138,
     "name": "VersionMismatchProtocol",
     "message": "Protocol version mismatch: account version incompatible with current program"
   },
   {
-    "code": 6122,
+    "code": 6139,
     "name": "AccountVersionTooOld",
     "message": "Account version too old: migration required"
   },
   {
-    "code": 6123,
+    "code": 6140,
     "name": "AccountVersionTooNew",
     "message": "Account version too new: program upgrade required"
   },
   {
-    "code": 6124,
+    "code": 6141,
     "name": "InvalidMigrationSource",
     "message": "Migration not allowed: invalid source version"
   },
   {
-    "code": 6125,
+    "code": 6142,
     "name": "InvalidMigrationTarget",
     "message": "Migration not allowed: invalid target version"
   },
   {
-    "code": 6126,
+    "code": 6143,
     "name": "UnauthorizedUpgrade",
     "message": "Only upgrade authority can perform this action"
   },
   {
-    "code": 6127,
+    "code": 6144,
     "name": "UnauthorizedProtocolAuthority",
     "message": "Only protocol authority can perform this action"
   },
   {
-    "code": 6128,
+    "code": 6145,
     "name": "InvalidMinVersion",
     "message": "Minimum version cannot exceed current protocol version"
   },
   {
-    "code": 6129,
+    "code": 6146,
     "name": "ProtocolConfigRequired",
     "message": "Protocol config account required: suspending an agent requires the protocol config PDA in remaining_accounts"
   },
   {
-    "code": 6130,
+    "code": 6147,
     "name": "ParentTaskCancelled",
     "message": "Parent task has been cancelled"
   },
   {
-    "code": 6131,
+    "code": 6148,
     "name": "ParentTaskDisputed",
     "message": "Parent task is in disputed state"
   },
   {
-    "code": 6132,
+    "code": 6149,
     "name": "InvalidDependencyType",
     "message": "Invalid dependency type"
   },
   {
-    "code": 6133,
+    "code": 6150,
     "name": "ParentTaskNotCompleted",
     "message": "Parent task must be completed before completing a proof-dependent task"
   },
   {
-    "code": 6134,
+    "code": 6151,
     "name": "ParentTaskAccountRequired",
     "message": "Parent task account required for proof-dependent task completion"
   },
   {
-    "code": 6135,
+    "code": 6152,
     "name": "UnauthorizedCreator",
     "message": "Parent task does not belong to the same creator"
   },
   {
-    "code": 6136,
+    "code": 6153,
     "name": "NullifierAlreadySpent",
     "message": "Nullifier has already been spent - proof/knowledge reuse detected"
   },
   {
-    "code": 6137,
+    "code": 6154,
     "name": "InvalidNullifier",
     "message": "Invalid nullifier: nullifier value cannot be all zeros"
   },
   {
-    "code": 6138,
+    "code": 6155,
     "name": "IncompleteWorkerAccounts",
     "message": "All worker accounts must be provided when cancelling a task with active claims"
   },
   {
-    "code": 6139,
+    "code": 6156,
     "name": "WorkerAccountsRequired",
     "message": "Worker accounts required when task has active workers"
   },
   {
-    "code": 6140,
+    "code": 6157,
     "name": "DuplicateArbiter",
     "message": "Duplicate arbiter provided in remaining_accounts"
   },
   {
-    "code": 6141,
+    "code": 6158,
     "name": "InsufficientEscrowBalance",
     "message": "Escrow has insufficient balance for reward transfer"
   },
   {
-    "code": 6142,
+    "code": 6159,
     "name": "InvalidStatusTransition",
     "message": "Invalid task status transition"
   },
   {
-    "code": 6143,
+    "code": 6160,
     "name": "StakeTooLow",
     "message": "Stake value is below minimum required (0.001 SOL)"
   },
   {
-    "code": 6144,
+    "code": 6161,
     "name": "InvalidMinStake",
     "message": "min_stake_for_dispute must be greater than zero"
   },
   {
-    "code": 6145,
+    "code": 6162,
     "name": "InvalidSlashAmount",
     "message": "Slash amount must be greater than zero"
   },
   {
-    "code": 6146,
+    "code": 6163,
     "name": "BondAmountTooLow",
     "message": "Bond amount too low"
   },
   {
-    "code": 6147,
+    "code": 6164,
     "name": "BondAlreadyExists",
     "message": "Bond already exists"
   },
   {
-    "code": 6148,
+    "code": 6165,
     "name": "BondNotFound",
     "message": "Bond not found"
   },
   {
-    "code": 6149,
+    "code": 6166,
     "name": "BondNotMatured",
     "message": "Bond not yet matured"
   },
   {
-    "code": 6150,
+    "code": 6167,
     "name": "InsufficientReputation",
     "message": "Agent reputation below task minimum requirement"
   },
   {
-    "code": 6151,
+    "code": 6168,
     "name": "InvalidMinReputation",
     "message": "Invalid minimum reputation: must be <= 10000"
   },
   {
-    "code": 6152,
+    "code": 6169,
     "name": "DevelopmentKeyNotAllowed",
     "message": "Development verifying key detected (gamma == delta). ZK proofs are forgeable. Run MPC ceremony before use."
   },
   {
-    "code": 6153,
+    "code": 6170,
     "name": "SelfTaskNotAllowed",
     "message": "Cannot claim own task: worker authority matches task creator"
   },
   {
-    "code": 6154,
+    "code": 6171,
     "name": "MissingTokenAccounts",
     "message": "Token accounts not provided for token-denominated task"
   },
   {
-    "code": 6155,
+    "code": 6172,
     "name": "InvalidTokenEscrow",
     "message": "Token escrow ATA does not match expected derivation"
   },
   {
-    "code": 6156,
+    "code": 6173,
     "name": "InvalidTokenMint",
     "message": "Provided mint does not match task's reward_mint"
   },
   {
-    "code": 6157,
+    "code": 6174,
     "name": "TokenTransferFailed",
     "message": "SPL token transfer CPI failed"
   },
   {
-    "code": 6158,
+    "code": 6175,
     "name": "ProposalNotActive",
     "message": "Proposal is not active"
   },
   {
-    "code": 6159,
+    "code": 6176,
     "name": "ProposalVotingNotEnded",
     "message": "Voting period has not ended"
   },
   {
-    "code": 6160,
+    "code": 6177,
     "name": "ProposalVotingEnded",
     "message": "Voting period has ended"
   },
   {
-    "code": 6161,
+    "code": 6178,
     "name": "ProposalAlreadyExecuted",
     "message": "Proposal has already been executed"
   },
   {
-    "code": 6162,
+    "code": 6179,
     "name": "ProposalInsufficientQuorum",
     "message": "Insufficient quorum for proposal execution"
   },
   {
-    "code": 6163,
+    "code": 6180,
     "name": "ProposalNotApproved",
     "message": "Proposal did not achieve majority"
   },
   {
-    "code": 6164,
+    "code": 6181,
     "name": "ProposalUnauthorizedCancel",
     "message": "Only the proposer can cancel this proposal"
   },
   {
-    "code": 6165,
+    "code": 6182,
     "name": "ProposalInsufficientStake",
     "message": "Insufficient stake to create a proposal"
   },
   {
-    "code": 6166,
+    "code": 6183,
     "name": "InvalidProposalPayload",
     "message": "Invalid proposal payload"
   },
   {
-    "code": 6167,
+    "code": 6184,
     "name": "InvalidProposalType",
     "message": "Invalid proposal type"
   },
   {
-    "code": 6168,
+    "code": 6185,
     "name": "TreasuryInsufficientBalance",
     "message": "Treasury spend amount exceeds available balance"
   },
   {
-    "code": 6169,
+    "code": 6186,
     "name": "TimelockNotElapsed",
     "message": "Execution timelock has not elapsed"
   },
   {
-    "code": 6170,
+    "code": 6187,
     "name": "InvalidGovernanceParam",
     "message": "Invalid governance configuration parameter"
   },
   {
-    "code": 6171,
+    "code": 6188,
     "name": "TreasuryNotProgramOwned",
     "message": "Treasury must be a program-owned PDA"
   },
   {
-    "code": 6172,
+    "code": 6189,
     "name": "TreasuryNotSpendable",
     "message": "Treasury must be program-owned, or a signer system account for governance spends"
   },
   {
-    "code": 6173,
+    "code": 6190,
     "name": "SkillInvalidId",
     "message": "Skill ID cannot be all zeros"
   },
   {
-    "code": 6174,
+    "code": 6191,
     "name": "SkillInvalidName",
     "message": "Skill name cannot be all zeros"
   },
   {
-    "code": 6175,
+    "code": 6192,
     "name": "SkillInvalidContentHash",
     "message": "Skill content hash cannot be all zeros"
   },
   {
-    "code": 6176,
+    "code": 6193,
     "name": "SkillNotActive",
     "message": "Skill is not active"
   },
   {
-    "code": 6177,
+    "code": 6194,
     "name": "SkillInvalidRating",
     "message": "Rating must be between 1 and 5"
   },
   {
-    "code": 6178,
+    "code": 6195,
     "name": "SkillSelfRating",
     "message": "Cannot rate own skill"
   },
   {
-    "code": 6179,
+    "code": 6196,
     "name": "SkillUnauthorizedUpdate",
     "message": "Only the skill author can update this skill"
   },
   {
-    "code": 6180,
+    "code": 6197,
     "name": "SkillSelfPurchase",
     "message": "Cannot purchase own skill"
   },
   {
-    "code": 6181,
+    "code": 6198,
     "name": "FeedInvalidContentHash",
     "message": "Feed content hash cannot be all zeros"
   },
   {
-    "code": 6182,
+    "code": 6199,
     "name": "FeedInvalidTopic",
     "message": "Feed topic cannot be all zeros"
   },
   {
-    "code": 6183,
+    "code": 6200,
     "name": "FeedPostNotFound",
     "message": "Feed post not found"
   },
   {
-    "code": 6184,
+    "code": 6201,
     "name": "FeedSelfUpvote",
     "message": "Cannot upvote own post"
   },
   {
-    "code": 6185,
+    "code": 6202,
     "name": "ReputationStakeAmountTooLow",
     "message": "Reputation stake amount must be greater than zero"
   },
   {
-    "code": 6186,
+    "code": 6203,
     "name": "ReputationStakeLocked",
     "message": "Reputation stake is locked: withdrawal before cooldown"
   },
   {
-    "code": 6187,
+    "code": 6204,
     "name": "ReputationStakeInsufficientBalance",
     "message": "Reputation stake has insufficient balance for withdrawal"
   },
   {
-    "code": 6188,
+    "code": 6205,
     "name": "ReputationDelegationAmountInvalid",
     "message": "Reputation delegation amount invalid: must be > 0, <= 10000, and >= MIN_DELEGATION_AMOUNT"
   },
   {
-    "code": 6189,
+    "code": 6206,
     "name": "ReputationCannotDelegateSelf",
     "message": "Cannot delegate reputation to self"
   },
   {
-    "code": 6190,
+    "code": 6207,
     "name": "ReputationDelegationExpired",
     "message": "Reputation delegation has expired"
   },
   {
-    "code": 6191,
+    "code": 6208,
     "name": "ReputationAgentNotActive",
     "message": "Agent must be Active to participate in reputation economy"
   },
   {
-    "code": 6192,
+    "code": 6209,
     "name": "ReputationDisputesPending",
     "message": "Agent has pending disputes as defendant: cannot withdraw stake"
   },
   {
-    "code": 6193,
+    "code": 6210,
     "name": "PrivateTaskRequiresZkProof",
     "message": "Private tasks (non-zero constraint_hash) must use complete_task_private"
   },
   {
-    "code": 6194,
+    "code": 6211,
     "name": "InvalidTokenAccountOwner",
     "message": "Token account owner does not match expected authority"
   },
   {
-    "code": 6195,
+    "code": 6212,
     "name": "InsufficientSeedEntropy",
     "message": "Binding or nullifier seed has insufficient byte diversity (min 8 distinct bytes required)"
   },
   {
-    "code": 6196,
+    "code": 6213,
     "name": "SkillPriceBelowMinimum",
     "message": "Skill price below minimum required"
   },
   {
-    "code": 6197,
+    "code": 6214,
     "name": "SkillPriceChanged",
     "message": "Skill price changed since transaction was prepared"
   },
   {
-    "code": 6198,
+    "code": 6215,
     "name": "DelegationCooldownNotElapsed",
     "message": "Delegation must be active for minimum duration before revocation"
   },
   {
-    "code": 6199,
+    "code": 6216,
     "name": "RateLimitBelowMinimum",
     "message": "Rate limit value below protocol minimum"
   }

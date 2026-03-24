@@ -177,6 +177,9 @@ Funding notes:
 - `test:devnet:disputes`: the creator needs reward funding plus dispute stake,
   the worker needs agent stake, each arbiter needs arbiter stake, and the
   protocol authority only needs fees for the final resolve step.
+- `test:devnet:bid-marketplace`: the creator needs reward funding plus agent
+  stake, the bidder needs agent stake plus bid bond, and the protocol
+  authority only needs fees if the bid marketplace config must be initialized.
 - `test:devnet:reputation`: the delegator needs agent stake plus
   `AGENC_REPUTATION_STAKE_LAMPORTS`; the delegatee needs enough SOL to register.
 
@@ -261,6 +264,60 @@ voting period is 24 hours:
 PROTOCOL_AUTHORITY_WALLET=/path/to/authority.json \
 npm run test:devnet:disputes -- --resume /tmp/agenc-sdk-devnet/dispute-....json
 ```
+
+### Bid marketplace flow
+
+```bash
+CREATOR_WALLET=/path/to/creator.json \
+WORKER_WALLET=/path/to/worker.json \
+PROTOCOL_AUTHORITY_WALLET=/path/to/authority.json \
+npm run test:devnet:bid-marketplace
+```
+
+Optional:
+
+- `AGENC_REWARD_LAMPORTS`
+- `PROTOCOL_SECOND_SIGNER_WALLET`
+- `PROTOCOL_THIRD_SIGNER_WALLET`
+
+This validates register -> create bid-exclusive task -> initialize bid book ->
+create bid -> update bid -> accept bid -> complete task with accepted-bid
+settlement accounts. If the bid marketplace config is not already initialized
+and the protocol multisig threshold is greater than one, provide the additional
+multisig signer wallet paths as needed. The validator writes a standalone
+artifact under `/tmp/agenc-sdk-devnet`.
+
+### Marketplace end-to-end flow
+
+```bash
+CREATOR_WALLET=/path/to/creator.json \
+WORKER_WALLET=/path/to/worker.json \
+ARBITER_A_WALLET=/path/to/arbiter-a.json \
+ARBITER_B_WALLET=/path/to/arbiter-b.json \
+ARBITER_C_WALLET=/path/to/arbiter-c.json \
+PROTOCOL_AUTHORITY_WALLET=/path/to/authority.json \
+npm run test:devnet:marketplace
+```
+
+This orchestrates the strict deep public-task validator, the bid marketplace
+validator, and the dispute validator, then writes a combined report artifact
+under `/tmp/agenc-sdk-devnet`. On public devnet, the first run usually ends
+with `overall=deferred` because the dispute voting window is 24 hours. Resume
+the combined report later to finish the resolution step:
+
+```bash
+npm run test:devnet:marketplace -- --resume /tmp/agenc-sdk-devnet/marketplace-e2e-....json
+```
+
+For a concrete operator workflow, including the expected deferred dispute
+artifact and resume commands from a real public-devnet run, see
+`docs/devnet-marketplace-runbook.md`.
+
+Coverage today:
+
+- direct marketplace lifecycle: automated
+- Marketplace V2 bid-book lifecycle: automated
+- dispute lifecycle: automated, with resume for final resolve on public devnet
 
 ### Reputation flow
 

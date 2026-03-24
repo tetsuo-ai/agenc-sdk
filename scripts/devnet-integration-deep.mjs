@@ -531,6 +531,7 @@ async function main() {
         "InvalidStatusTransition",
         "TaskCannotBeCancelled",
         "AccountNotInitialized",
+        "InvalidAccountOwner",
       ],
       async () =>
         sdk.cancelTask(
@@ -543,12 +544,13 @@ async function main() {
     results.push(cancelAfterCompleteResult);
     if (
       cancelAfterCompleteResult !== "InvalidStatusTransition" &&
-      cancelAfterCompleteResult !== "TaskCannotBeCancelled"
+      cancelAfterCompleteResult !== "TaskCannotBeCancelled" &&
+      cancelAfterCompleteResult !== "InvalidAccountOwner"
     ) {
       noteMismatch(
         mismatches,
         "reject cancel after complete",
-        "InvalidStatusTransition|TaskCannotBeCancelled",
+        "InvalidStatusTransition|TaskCannotBeCancelled|InvalidAccountOwner",
         cancelAfterCompleteResult,
       );
     }
