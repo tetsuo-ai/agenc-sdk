@@ -47,6 +47,10 @@ import {
   RECOMMENDED_CU_ACCEPT_TASK_RESULT,
   RECOMMENDED_CU_ACCEPT_TASK_RESULT_TOKEN,
   RECOMMENDED_CU_REJECT_TASK_RESULT,
+  RECOMMENDED_CU_AUTO_ACCEPT_TASK_RESULT,
+  RECOMMENDED_CU_AUTO_ACCEPT_TASK_RESULT_TOKEN,
+  RECOMMENDED_CU_VALIDATE_TASK_RESULT,
+  RECOMMENDED_CU_VALIDATE_TASK_RESULT_TOKEN,
   RECOMMENDED_CU_CANCEL_TASK,
   RECOMMENDED_CU_CANCEL_TASK_TOKEN,
 } from "./constants";
@@ -67,6 +71,8 @@ export { TaskState };
 export enum TaskValidationMode {
   Auto = 0,
   CreatorReview = 1,
+  ValidatorQuorum = 2,
+  ExternalAttestation = 3,
 }
 
 export enum TaskSubmissionStatus {
@@ -138,6 +144,10 @@ export interface ConfigureTaskValidationParams {
   mode: TaskValidationMode | number;
   /** Review window in seconds (i64) */
   reviewWindowSecs: number | bigint;
+  /** Validator approvals required in validator-quorum mode */
+  validatorQuorum?: number;
+  /** Optional external attestor wallet */
+  attestor?: PublicKey | null;
 }
 
 export interface SubmitTaskResultParams {
@@ -150,6 +160,13 @@ export interface SubmitTaskResultParams {
 export interface RejectTaskResultParams {
   /** Evidence or rejection reason hash (32 bytes) */
   rejectionHash: Uint8Array | number[];
+}
+
+export interface ValidateTaskResultParams {
+  /** Whether the reviewer approves the submission */
+  approved: boolean;
+  /** Optional validator agent ID for validator-quorum mode */
+  validatorAgentId?: Uint8Array | number[] | null;
 }
 
 export interface PrivateCompletionPayload {
@@ -336,6 +353,21 @@ export function deriveTaskValidationConfigPda(
 }
 
 /**
+ * Derive task attestor config PDA from task.
+ * Seeds: ["task_attestor", task_pda]
+ */
+export function deriveTaskAttestorConfigPda(
+  taskPda: PublicKey,
+  programId: PublicKey = PROGRAM_ID,
+): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [SEEDS.TASK_ATTESTOR, taskPda.toBuffer()],
+    programId,
+  );
+  return pda;
+}
+
+/**
  * Derive task submission PDA from claim.
  * Seeds: ["task_submission", claim_pda]
  */
@@ -345,6 +377,26 @@ export function deriveTaskSubmissionPda(
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [SEEDS.TASK_SUBMISSION, claimPda.toBuffer()],
+    programId,
+  );
+  return pda;
+}
+
+/**
+ * Derive task validation vote PDA from submission and reviewer wallet.
+ * Seeds: ["task_validation_vote", task_submission_pda, reviewer]
+ */
+export function deriveTaskValidationVotePda(
+  taskSubmissionPda: PublicKey,
+  reviewer: PublicKey,
+  programId: PublicKey = PROGRAM_ID,
+): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [
+      SEEDS.TASK_VALIDATION_VOTE,
+      taskSubmissionPda.toBuffer(),
+      reviewer.toBuffer(),
+    ],
     programId,
   );
   return pda;
@@ -1328,22 +1380,30 @@ export async function configureTaskValidation(
   creator: Keypair,
   taskPda: PublicKey,
   params: ConfigureTaskValidationParams,
-): Promise<{ taskValidationConfigPda: PublicKey; txSignature: string }> {
+): Promise<{
+  taskValidationConfigPda: PublicKey;
+  taskAttestorConfigPda: PublicKey;
+  txSignature: string;
+}> {
   const programId = program.programId;
   const taskValidationConfigPda = deriveTaskValidationConfigPda(
     taskPda,
     programId,
   );
+  const taskAttestorConfigPda = deriveTaskAttestorConfigPda(taskPda, programId);
   const protocolPda = deriveProtocolPda(programId);
 
   const tx = await program.methods
     .configureTaskValidation(
       params.mode,
       new AnchorBN(params.reviewWindowSecs.toString()),
+      params.validatorQuorum ?? 0,
+      params.attestor ?? null,
     )
     .accountsPartial({
       task: taskPda,
       taskValidationConfig: taskValidationConfigPda,
+      taskAttestorConfig: taskAttestorConfigPda,
       protocolConfig: protocolPda,
       creator: creator.publicKey,
       systemProgram: SystemProgram.programId,
@@ -1358,7 +1418,7 @@ export async function configureTaskValidation(
 
   await connection.confirmTransaction(tx, "confirmed");
 
-  return { taskValidationConfigPda, txSignature: tx };
+  return { taskValidationConfigPda, taskAttestorConfigPda, txSignature: tx };
 }
 
 /**
@@ -1428,7 +1488,7 @@ export async function submitTaskResult(
 export async function acceptTaskResult(
   connection: Connection,
   program: Program,
-  reviewer: Keypair,
+  creator: Keypair,
   workerAgentId: Uint8Array | number[],
   taskPda: PublicKey,
   options?: TaskCompletionOptions,
@@ -1477,16 +1537,15 @@ export async function acceptTaskResult(
       worker: workerAgentPda,
       protocolConfig: protocolPda,
       treasury: protocolConfig.treasury,
-      creator: task.creator,
+      creator: creator.publicKey,
       workerAuthority: workerReviewContext.authority,
-      reviewer: reviewer.publicKey,
       systemProgram: SystemProgram.programId,
       ...tokenAccounts,
     })
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({ units: cuLimit }),
     ])
-    .signers([reviewer]);
+    .signers([creator]);
 
   const remainingAccounts = buildTaskCompletionRemainingAccounts(
     options,
@@ -1523,6 +1582,7 @@ export async function rejectTaskResult(
   );
   const taskSubmissionPda = deriveTaskSubmissionPda(claimPda, programId);
   const protocolPda = deriveProtocolPda(programId);
+  const workerReviewContext = await fetchWorkerReviewContext(program, workerAgentPda);
   const rejectionHash = Array.from(
     toFixedBytes(
       Buffer.from(params.rejectionHash),
@@ -1538,8 +1598,10 @@ export async function rejectTaskResult(
       claim: claimPda,
       taskValidationConfig: taskValidationConfigPda,
       taskSubmission: taskSubmissionPda,
+      worker: workerAgentPda,
       protocolConfig: protocolPda,
       creator: creator.publicKey,
+      workerAuthority: workerReviewContext.authority,
     })
     .preInstructions([
       ComputeBudgetProgram.setComputeUnitLimit({
@@ -1552,6 +1614,187 @@ export async function rejectTaskResult(
   await connection.confirmTransaction(tx, "confirmed");
 
   return { txSignature: tx };
+}
+
+/**
+ * Permissionlessly auto-accept a timed-out creator-review submission.
+ */
+export async function autoAcceptTaskResult(
+  connection: Connection,
+  program: Program,
+  authority: Keypair,
+  workerAgentId: Uint8Array | number[],
+  taskPda: PublicKey,
+  options?: TaskCompletionOptions,
+): Promise<{ txSignature: string }> {
+  const programId = program.programId;
+  const workerAgentPda = deriveAgentPda(workerAgentId, programId);
+  const claimPda = deriveClaimPda(taskPda, workerAgentPda, programId);
+  const escrowPda = deriveEscrowPda(taskPda, programId);
+  const taskValidationConfigPda = deriveTaskValidationConfigPda(
+    taskPda,
+    programId,
+  );
+  const taskSubmissionPda = deriveTaskSubmissionPda(claimPda, programId);
+  const protocolPda = deriveProtocolPda(programId);
+
+  const { task, protocolConfig } = await fetchCompletionContext(
+    program,
+    taskPda,
+    protocolPda,
+  );
+  const workerReviewContext = await fetchWorkerReviewContext(
+    program,
+    workerAgentPda,
+  );
+
+  const mint = task.rewardMint;
+  const tokenAccounts = buildCompletionTokenAccounts(
+    mint,
+    escrowPda,
+    workerReviewContext.authority,
+    protocolConfig.treasury,
+  );
+
+  const cuLimit = mint
+    ? RECOMMENDED_CU_AUTO_ACCEPT_TASK_RESULT_TOKEN
+    : RECOMMENDED_CU_AUTO_ACCEPT_TASK_RESULT;
+
+  const builder = program.methods
+    .autoAcceptTaskResult()
+    .accountsPartial({
+      task: taskPda,
+      claim: claimPda,
+      escrow: escrowPda,
+      taskValidationConfig: taskValidationConfigPda,
+      taskSubmission: taskSubmissionPda,
+      worker: workerAgentPda,
+      protocolConfig: protocolPda,
+      treasury: protocolConfig.treasury,
+      creator: task.creator,
+      workerAuthority: workerReviewContext.authority,
+      authority: authority.publicKey,
+      systemProgram: SystemProgram.programId,
+      ...tokenAccounts,
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: cuLimit }),
+    ])
+    .signers([authority]);
+
+  const remainingAccounts = buildTaskCompletionRemainingAccounts(
+    options,
+    workerReviewContext.authority,
+  );
+  if (remainingAccounts.length > 0) {
+    builder.remainingAccounts(remainingAccounts);
+  }
+
+  const tx = await builder.rpc();
+
+  await connection.confirmTransaction(tx, "confirmed");
+
+  return { txSignature: tx };
+}
+
+/**
+ * Record a validator quorum vote or external attestation for a submission.
+ */
+export async function validateTaskResult(
+  connection: Connection,
+  program: Program,
+  reviewer: Keypair,
+  workerAgentId: Uint8Array | number[],
+  taskPda: PublicKey,
+  params: ValidateTaskResultParams,
+  options?: TaskCompletionOptions,
+): Promise<{
+  taskSubmissionPda: PublicKey;
+  taskValidationVotePda: PublicKey;
+  txSignature: string;
+}> {
+  const programId = program.programId;
+  const workerAgentPda = deriveAgentPda(workerAgentId, programId);
+  const claimPda = deriveClaimPda(taskPda, workerAgentPda, programId);
+  const escrowPda = deriveEscrowPda(taskPda, programId);
+  const taskValidationConfigPda = deriveTaskValidationConfigPda(
+    taskPda,
+    programId,
+  );
+  const taskAttestorConfigPda = deriveTaskAttestorConfigPda(taskPda, programId);
+  const taskSubmissionPda = deriveTaskSubmissionPda(claimPda, programId);
+  const taskValidationVotePda = deriveTaskValidationVotePda(
+    taskSubmissionPda,
+    reviewer.publicKey,
+    programId,
+  );
+  const protocolPda = deriveProtocolPda(programId);
+  const validatorAgentPda = params.validatorAgentId
+    ? deriveAgentPda(params.validatorAgentId, programId)
+    : null;
+
+  const { task, protocolConfig } = await fetchCompletionContext(
+    program,
+    taskPda,
+    protocolPda,
+  );
+  const workerReviewContext = await fetchWorkerReviewContext(
+    program,
+    workerAgentPda,
+  );
+
+  const mint = task.rewardMint;
+  const tokenAccounts = buildCompletionTokenAccounts(
+    mint,
+    escrowPda,
+    workerReviewContext.authority,
+    protocolConfig.treasury,
+  );
+
+  const cuLimit = mint
+    ? RECOMMENDED_CU_VALIDATE_TASK_RESULT_TOKEN
+    : RECOMMENDED_CU_VALIDATE_TASK_RESULT;
+
+  const builder = program.methods
+    .validateTaskResult(params.approved)
+    .accountsPartial({
+      task: taskPda,
+      claim: claimPda,
+      escrow: escrowPda,
+      taskValidationConfig: taskValidationConfigPda,
+      taskAttestorConfig: validatorAgentPda
+        ? undefined
+        : taskAttestorConfigPda,
+      taskSubmission: taskSubmissionPda,
+      taskValidationVote: taskValidationVotePda,
+      worker: workerAgentPda,
+      protocolConfig: protocolPda,
+      validatorAgent: validatorAgentPda ?? undefined,
+      treasury: protocolConfig.treasury,
+      creator: task.creator,
+      workerAuthority: workerReviewContext.authority,
+      reviewer: reviewer.publicKey,
+      systemProgram: SystemProgram.programId,
+      ...tokenAccounts,
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({ units: cuLimit }),
+    ])
+    .signers([reviewer]);
+
+  const remainingAccounts = buildTaskCompletionRemainingAccounts(
+    options,
+    workerReviewContext.authority,
+  );
+  if (remainingAccounts.length > 0) {
+    builder.remainingAccounts(remainingAccounts);
+  }
+
+  const tx = await builder.rpc();
+
+  await connection.confirmTransaction(tx, "confirmed");
+
+  return { taskSubmissionPda, taskValidationVotePda, txSignature: tx };
 }
 
 /**

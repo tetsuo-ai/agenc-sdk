@@ -10,6 +10,8 @@ import {
   submitTaskResult,
   acceptTaskResult,
   rejectTaskResult,
+  autoAcceptTaskResult,
+  validateTaskResult,
   cancelTask,
   getTask,
   TaskValidationMode,
@@ -121,6 +123,8 @@ describe("SDK contract tests", () => {
       {
         mode: TaskValidationMode.CreatorReview,
         reviewWindowSecs: 3600,
+        validatorQuorum: 2,
+        attestor: createPublicKeySeeded(82),
       },
     );
 
@@ -136,6 +140,7 @@ describe("SDK contract tests", () => {
     expect(builder.accountsPartial).toHaveBeenCalledWith(
       expect.objectContaining({
         task: taskPda,
+        taskAttestorConfig: result.taskAttestorConfigPda,
         creator: creator.publicKey,
       }),
     );
@@ -501,16 +506,15 @@ describe("SDK contract tests", () => {
       ["acceptTaskResult"],
       "tx-accept-task-result",
     ) as never;
-    const reviewer = makeKeypair(90);
+    const creatorSigner = makeKeypair(90);
     const taskPda = createPublicKeySeeded(91);
     const workerId = new Uint8Array(32);
     workerId.fill(92);
-    const creator = createPublicKeySeeded(93);
     const treasury = createPublicKeySeeded(94);
     const workerAuthority = createPublicKeySeeded(95);
 
     mockGetAccount({
-      creator,
+      creator: creatorSigner.publicKey,
       rewardMint: null,
     } as never);
     mockGetAccount({
@@ -523,7 +527,7 @@ describe("SDK contract tests", () => {
     const result = await acceptTaskResult(
       connection,
       program as never,
-      reviewer,
+      creatorSigner,
       workerId,
       taskPda,
     );
@@ -535,10 +539,9 @@ describe("SDK contract tests", () => {
     expect(builder.accountsPartial).toHaveBeenCalledWith(
       expect.objectContaining({
         task: taskPda,
-        creator,
+        creator: creatorSigner.publicKey,
         treasury,
         workerAuthority,
-        reviewer: reviewer.publicKey,
       }),
     );
   });
@@ -549,7 +552,7 @@ describe("SDK contract tests", () => {
       ["acceptTaskResult"],
       "tx-accept-task-result-v2",
     ) as never;
-    const reviewer = makeKeypair(96);
+    const creatorSigner = makeKeypair(96);
     const taskPda = createPublicKeySeeded(97);
     const workerId = new Uint8Array(32);
     workerId.fill(98);
@@ -560,7 +563,7 @@ describe("SDK contract tests", () => {
     const workerAuthority = createPublicKeySeeded(103);
 
     mockGetAccount({
-      creator: createPublicKeySeeded(104),
+      creator: creatorSigner.publicKey,
       rewardMint: null,
     } as never);
     mockGetAccount({
@@ -573,7 +576,7 @@ describe("SDK contract tests", () => {
     await acceptTaskResult(
       connection,
       program as never,
-      reviewer,
+      creatorSigner,
       workerId,
       taskPda,
       {
@@ -607,6 +610,11 @@ describe("SDK contract tests", () => {
     const taskPda = createPublicKeySeeded(107);
     const workerId = new Uint8Array(32);
     workerId.fill(108);
+    const workerAuthority = createPublicKeySeeded(109);
+
+    mockGetAccount({
+      authority: workerAuthority,
+    } as never);
 
     const result = await rejectTaskResult(
       connection,
@@ -627,6 +635,111 @@ describe("SDK contract tests", () => {
       expect.objectContaining({
         task: taskPda,
         creator: creator.publicKey,
+        workerAuthority,
+      }),
+    );
+  });
+
+  it("returns stable contract for autoAcceptTaskResult", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(
+      ["autoAcceptTaskResult"],
+      "tx-auto-accept-task-result",
+    ) as never;
+    const authority = makeKeypair(110);
+    const taskPda = createPublicKeySeeded(111);
+    const workerId = new Uint8Array(32);
+    workerId.fill(112);
+    const creator = createPublicKeySeeded(113);
+    const treasury = createPublicKeySeeded(114);
+    const workerAuthority = createPublicKeySeeded(115);
+
+    mockGetAccount({
+      creator,
+      rewardMint: null,
+    } as never);
+    mockGetAccount({
+      treasury,
+    } as never);
+    mockGetAccount({
+      authority: workerAuthority,
+    } as never);
+
+    const result = await autoAcceptTaskResult(
+      connection,
+      program as never,
+      authority,
+      workerId,
+      taskPda,
+    );
+
+    expect(result).toEqual({ txSignature: "tx-auto-accept-task-result" });
+
+    const builder = (program as any).methods.autoAcceptTaskResult.mock.results[0]
+      .value;
+    expect(builder.accountsPartial).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: taskPda,
+        authority: authority.publicKey,
+        creator,
+        treasury,
+        workerAuthority,
+      }),
+    );
+  });
+
+  it("returns stable contract for validateTaskResult", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(
+      ["validateTaskResult"],
+      "tx-validate-task-result",
+    ) as never;
+    const reviewer = makeKeypair(116);
+    const taskPda = createPublicKeySeeded(117);
+    const workerId = new Uint8Array(32);
+    workerId.fill(118);
+    const validatorAgentId = new Uint8Array(32);
+    validatorAgentId.fill(119);
+    const creator = createPublicKeySeeded(120);
+    const treasury = createPublicKeySeeded(121);
+    const workerAuthority = createPublicKeySeeded(122);
+
+    mockGetAccount({
+      creator,
+      rewardMint: null,
+    } as never);
+    mockGetAccount({
+      treasury,
+    } as never);
+    mockGetAccount({
+      authority: workerAuthority,
+    } as never);
+
+    const result = await validateTaskResult(
+      connection,
+      program as never,
+      reviewer,
+      workerId,
+      taskPda,
+      {
+        approved: true,
+        validatorAgentId,
+      },
+    );
+
+    expect(result).toHaveProperty("txSignature", "tx-validate-task-result");
+    expect(result).toHaveProperty("taskSubmissionPda");
+    expect(result).toHaveProperty("taskValidationVotePda");
+
+    const builder = (program as any).methods.validateTaskResult.mock.results[0]
+      .value;
+    expect(builder.accountsPartial).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: taskPda,
+        reviewer: reviewer.publicKey,
+        creator,
+        treasury,
+        workerAuthority,
       }),
     );
   });

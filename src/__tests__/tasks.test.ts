@@ -18,7 +18,9 @@ import {
   deriveTaskPda,
   deriveClaimPda,
   deriveTaskValidationConfigPda,
+  deriveTaskAttestorConfigPda,
   deriveTaskSubmissionPda,
+  deriveTaskValidationVotePda,
   deriveEscrowPda,
   deriveAuthorityRateLimitPda,
   calculateEscrowFee,
@@ -93,6 +95,14 @@ describe("TaskValidationMode enum", () => {
 
   it("CreatorReview equals 1", () => {
     expect(TaskValidationMode.CreatorReview).toBe(1);
+  });
+
+  it("ValidatorQuorum equals 2", () => {
+    expect(TaskValidationMode.ValidatorQuorum).toBe(2);
+  });
+
+  it("ExternalAttestation equals 3", () => {
+    expect(TaskValidationMode.ExternalAttestation).toBe(3);
   });
 });
 
@@ -254,6 +264,39 @@ describe("PDA derivation", () => {
 
       const [expected] = PublicKey.findProgramAddressSync(
         [SEEDS.TASK_SUBMISSION, claimPda.toBuffer()],
+        PROGRAM_ID,
+      );
+      expect(result.equals(expected)).toBe(true);
+    });
+  });
+
+  describe("deriveTaskAttestorConfigPda", () => {
+    it('uses correct seeds: ["task_attestor", taskPda]', () => {
+      const taskPda = Keypair.generate().publicKey;
+
+      const result = deriveTaskAttestorConfigPda(taskPda);
+
+      const [expected] = PublicKey.findProgramAddressSync(
+        [SEEDS.TASK_ATTESTOR, taskPda.toBuffer()],
+        PROGRAM_ID,
+      );
+      expect(result.equals(expected)).toBe(true);
+    });
+  });
+
+  describe("deriveTaskValidationVotePda", () => {
+    it('uses correct seeds: ["task_validation_vote", taskSubmissionPda, reviewer]', () => {
+      const taskSubmissionPda = Keypair.generate().publicKey;
+      const reviewer = Keypair.generate().publicKey;
+
+      const result = deriveTaskValidationVotePda(taskSubmissionPda, reviewer);
+
+      const [expected] = PublicKey.findProgramAddressSync(
+        [
+          SEEDS.TASK_VALIDATION_VOTE,
+          taskSubmissionPda.toBuffer(),
+          reviewer.toBuffer(),
+        ],
         PROGRAM_ID,
       );
       expect(result.equals(expected)).toBe(true);

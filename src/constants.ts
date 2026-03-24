@@ -142,6 +142,18 @@ export const RECOMMENDED_CU_ACCEPT_TASK_RESULT_TOKEN = 220_000;
 /** CU budget for reject_task_result instruction */
 export const RECOMMENDED_CU_REJECT_TASK_RESULT = 50_000;
 
+/** CU budget for auto_accept_task_result instruction */
+export const RECOMMENDED_CU_AUTO_ACCEPT_TASK_RESULT = 120_000;
+
+/** CU budget for auto_accept_task_result with SPL token payment */
+export const RECOMMENDED_CU_AUTO_ACCEPT_TASK_RESULT_TOKEN = 220_000;
+
+/** CU budget for validate_task_result instruction */
+export const RECOMMENDED_CU_VALIDATE_TASK_RESULT = 150_000;
+
+/** CU budget for validate_task_result with SPL token payment */
+export const RECOMMENDED_CU_VALIDATE_TASK_RESULT_TOKEN = 250_000;
+
 /** CU budget for cancel_task instruction */
 export const RECOMMENDED_CU_CANCEL_TASK = 40_000;
 
@@ -238,7 +250,9 @@ export const SEEDS = {
   TASK: Buffer.from("task"),
   CLAIM: Buffer.from("claim"),
   TASK_VALIDATION: Buffer.from("task_validation"),
+  TASK_ATTESTOR: Buffer.from("task_attestor"),
   TASK_SUBMISSION: Buffer.from("task_submission"),
+  TASK_VALIDATION_VOTE: Buffer.from("task_validation_vote"),
   AUTHORITY_RATE_LIMIT: Buffer.from("authority_rate_limit"),
   BID_MARKETPLACE: Buffer.from("bid_marketplace"),
   BID_BOOK: Buffer.from("bid_book"),
