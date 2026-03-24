@@ -72,7 +72,6 @@ async function waitForInterPhaseCooldown(reason) {
   );
   await sleep(DEFAULT_INTER_PHASE_COOLDOWN_SECONDS * 1000);
 }
-
 function buildPhaseSummary(name, result) {
   return {
     name,
