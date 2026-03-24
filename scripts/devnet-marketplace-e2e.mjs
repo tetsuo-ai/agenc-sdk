@@ -21,6 +21,9 @@ const BID_MARKETPLACE_SCRIPT = path.join(
   "devnet-bid-marketplace.mjs",
 );
 const DISPUTE_SCRIPT = path.join(__dirname, "devnet-disputes.mjs");
+const DEFAULT_INTER_PHASE_COOLDOWN_SECONDS = Number(
+  process.env.AGENC_INTER_PHASE_COOLDOWN_SECONDS ?? "65",
+);
 
 function usage() {
   process.stdout.write(`Usage:
@@ -53,6 +56,22 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForInterPhaseCooldown(reason) {
+  if (!Number.isFinite(DEFAULT_INTER_PHASE_COOLDOWN_SECONDS)) {
+    return;
+  }
+  if (DEFAULT_INTER_PHASE_COOLDOWN_SECONDS <= 0) {
+    return;
+  }
+  process.stdout.write(
+    `[wait] ${DEFAULT_INTER_PHASE_COOLDOWN_SECONDS}s before ${reason} to avoid wallet-scoped task creation cooldown overlap\n`,
+  );
+  await sleep(DEFAULT_INTER_PHASE_COOLDOWN_SECONDS * 1000);
+}
 function buildPhaseSummary(name, result) {
   return {
     name,
@@ -384,10 +403,12 @@ async function initialRun() {
     }),
   );
 
+  await waitForInterPhaseCooldown("bid-marketplace");
   const bidRun = await summarizeBidResult(
     await runNodeScript("bid-marketplace", BID_MARKETPLACE_SCRIPT),
   );
 
+  await waitForInterPhaseCooldown("disputes");
   const disputeRun = summarizeDisputeResult(
     await runNodeScript("disputes", DISPUTE_SCRIPT),
     "initial",
@@ -416,6 +437,7 @@ async function initialRun() {
       "This runner validates the direct marketplace lifecycle, the Marketplace V2 bid-book lifecycle, and the dispute lifecycle on public devnet.",
       "A first-run deferred dispute result is expected on public devnet because the protocol voting period is 24 hours.",
       "The bid-book validator proves accepted-bid settlement all the way through completeTask.",
+      `Inter-phase cooldown is set to ${DEFAULT_INTER_PHASE_COOLDOWN_SECONDS}s to avoid wallet-scoped task creation throttles when the same creator wallet is reused across phases.`,
     ],
     resume: {
       disputeArtifactPath: disputeRun.artifactPath ?? null,

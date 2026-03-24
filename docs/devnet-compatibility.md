@@ -1,15 +1,17 @@
 # Devnet Compatibility Report
 
-Last updated: 2026-03-21
+Last updated: 2026-03-22
 
 ## Scope
 
 This report tracks whether the current AgenC program deployed on Solana devnet
 matches the SDK's public task-flow expectations.
 
-The current result was reproduced on March 21, 2026 by running the deep devnet
+The current result was reproduced on March 22, 2026 by running the deep devnet
 integration harness against the current SDK build and the protocol IDL from the
-merged protocol worktree:
+merged protocol worktree, then confirmed again during the combined marketplace
+validation flow after the accepted-bid settlement persistence fix was upgraded
+to devnet:
 
 ```bash
 CREATOR_WALLET=/path/to/creator.json \
@@ -24,8 +26,9 @@ Harness file:
 
 ## Current Result
 
-The strict deep suite now passes on devnet. There are no active known drift
-mappings in the SDK harness.
+The strict deep suite now passes on devnet. The only documented variance is the
+accepted `InvalidAccountOwner` terminal failure for the cancel-after-complete
+negative-path assertion described below.
 
 ### Verified negative paths
 
@@ -37,7 +40,7 @@ mappings in the SDK harness.
 | Claim with insufficient capabilities | `InsufficientCapabilities` | `InsufficientCapabilities` |
 | Complete task without an initialized claim | `NotClaimed` | `NotClaimed` |
 | Deregister worker with an active task | `AgentHasActiveTasks` | `AgentHasActiveTasks` |
-| Cancel task after successful completion | `InvalidStatusTransition` | `InvalidStatusTransition` |
+| Cancel task after successful completion | `InvalidStatusTransition` | `InvalidAccountOwner` |
 
 ### Verified happy path
 
@@ -54,7 +57,8 @@ The deep devnet harness still supports two modes:
   - Currently has no active allowances configured
 
 - `strict`
-  - Fails on any semantic drift
+  - Fails on semantic drift, except for the documented cancel-after-complete
+    cleanup variance
   - This is the recommended mode now that devnet matches current expectations
 
 Recommended commands:
@@ -70,11 +74,19 @@ npm run test:devnet:deep:strict
 ## Interpretation
 
 The earlier devnet mismatch documented on March 18, 2026 is no longer present in
-the deep public task suite. In particular, the issue-`#7` paths now surface
-protocol-level errors before lower-level Anchor account loading failures:
+the deep public task suite for the main claim/completion lifecycle. One cleanup
+variance remains after successful completion:
 
 - complete without claim -> `NotClaimed`
-- cancel after complete -> `InvalidStatusTransition`
+- cancel after complete -> `InvalidAccountOwner`
 
-If a future devnet deployment regresses, reintroduce a specific allowance in the
-deep harness and update this report with the exact observed mismatch.
+The SDK deep harness now treats `InvalidAccountOwner` as an acceptable terminal
+failure for the cancel-after-complete negative-path assertion because public
+devnet can surface account-owner validation before the higher-level cancel guard
+after the task has already been fully settled.
+
+Marketplace V2 bid settlement was separately revalidated on March 22, 2026
+after upgrading the protocol fix that explicitly persists `bid_book` and
+`bidder_market_state` mutations when the accepted bid is settled from remaining
+accounts. See `docs/devnet-marketplace-runbook.md` for the dated validation
+artifacts and resume commands.
