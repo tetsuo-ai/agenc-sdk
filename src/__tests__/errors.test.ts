@@ -68,4 +68,15 @@ describe("errors", () => {
     });
     expect(fromHex?.name).toBe("AgentAlreadyRegistered");
   });
+
+  it("decodes protocol InsufficientStake with the current devnet/program IDL code", () => {
+    const decoded = decodeAnchorError({
+      message:
+        "AnchorError thrown in src/instructions/register_agent.rs:69. Error Code: InsufficientStake. Error Number: 6127. Error Message: Insufficient stake for arbiter registration.",
+    });
+
+    expect(decoded).not.toBeNull();
+    expect(decoded?.name).toBe("InsufficientStake");
+    expect(decoded?.message).toBe("Insufficient stake for arbiter registration");
+  });
 });

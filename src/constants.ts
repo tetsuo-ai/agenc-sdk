@@ -127,6 +127,21 @@ export const RECOMMENDED_CU_COMPLETE_TASK = 60_000;
 /** CU budget for complete_task_private (ZK) instruction - highest due to RISC Zero verifier router CPI */
 export const RECOMMENDED_CU_COMPLETE_TASK_PRIVATE = 200_000;
 
+/** CU budget for configure_task_validation instruction */
+export const RECOMMENDED_CU_CONFIGURE_TASK_VALIDATION = 40_000;
+
+/** CU budget for submit_task_result instruction */
+export const RECOMMENDED_CU_SUBMIT_TASK_RESULT = 70_000;
+
+/** CU budget for accept_task_result instruction */
+export const RECOMMENDED_CU_ACCEPT_TASK_RESULT = 120_000;
+
+/** CU budget for accept_task_result with SPL token payment */
+export const RECOMMENDED_CU_ACCEPT_TASK_RESULT_TOKEN = 220_000;
+
+/** CU budget for reject_task_result instruction */
+export const RECOMMENDED_CU_REJECT_TASK_RESULT = 50_000;
+
 /** CU budget for cancel_task instruction */
 export const RECOMMENDED_CU_CANCEL_TASK = 40_000;
 
@@ -222,6 +237,9 @@ export const SEEDS = {
   ZK_CONFIG: Buffer.from("zk_config"),
   TASK: Buffer.from("task"),
   CLAIM: Buffer.from("claim"),
+  TASK_VALIDATION: Buffer.from("task_validation"),
+  TASK_SUBMISSION: Buffer.from("task_submission"),
+  AUTHORITY_RATE_LIMIT: Buffer.from("authority_rate_limit"),
   BID_MARKETPLACE: Buffer.from("bid_marketplace"),
   BID_BOOK: Buffer.from("bid_book"),
   BID: Buffer.from("bid"),

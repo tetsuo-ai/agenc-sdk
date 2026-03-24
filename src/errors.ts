@@ -1,5 +1,5 @@
 /**
- * Full AgenC coordination-program error map (6000-6216).
+ * Full AgenC coordination-program error map (6000-6229).
  */
 
 export type ErrorCategory =
@@ -420,706 +420,771 @@ export const COORDINATION_ERROR_MAP: Record<number, CoordinationErrorEntry> = {
     category: "claim",
   },
   6076: {
+    name: "ValidationModeUnsupportedTaskType",
+    message: "Task Validation V2 is only supported for exclusive task flows",
+    category: "task",
+  },
+  6077: {
+    name: "InvalidValidationMode",
+    message: "Invalid validation mode",
+    category: "task",
+  },
+  6078: {
+    name: "InvalidReviewWindow",
+    message: "Invalid review window",
+    category: "task",
+  },
+  6079: {
+    name: "TaskValidationConfigRequired",
+    message: "Task validation configuration required",
+    category: "task",
+  },
+  6080: {
+    name: "TaskValidationAlreadyConfigured",
+    message: "Task already has validation configured",
+    category: "task",
+  },
+  6081: {
+    name: "TaskValidationImmutableAfterClaim",
+    message: "Task validation cannot be reconfigured once work has started",
+    category: "task",
+  },
+  6082: {
+    name: "TaskSubmissionRequired",
+    message: "Task submission is required",
+    category: "task",
+  },
+  6083: {
+    name: "SubmissionAlreadyPending",
+    message: "Task submission already pending review",
+    category: "task",
+  },
+  6084: {
+    name: "SubmissionNotPending",
+    message: "Task submission is not pending review",
+    category: "task",
+  },
+  6085: {
+    name: "SubmissionAlreadyResolved",
+    message: "Task submission has already been resolved",
+    category: "task",
+  },
+  6086: {
+    name: "TaskNotPendingValidation",
+    message: "Task is not pending validation",
+    category: "task",
+  },
+  6087: {
+    name: "ManualValidationRequiresReviewFlow",
+    message: "Task uses creator-review validation and must submit through Task Validation V2",
+    category: "task",
+  },
+  6088: {
+    name: "ManualValidationPrivateTaskUnsupported",
+    message: "Creator-review validation is not supported for private tasks yet",
+    category: "task",
+  },
+  6089: {
     name: "DisputeNotActive",
     message: "Dispute is not active",
     category: "dispute",
   },
-  6077: {
+  6090: {
     name: "VotingEnded",
     message: "Voting period has ended",
     category: "dispute",
   },
-  6078: {
+  6091: {
     name: "VotingNotEnded",
     message: "Voting period has not ended",
     category: "dispute",
   },
-  6079: {
+  6092: {
     name: "AlreadyVoted",
     message: "Already voted on this dispute",
     category: "dispute",
   },
-  6080: {
+  6093: {
     name: "NotArbiter",
     message: "Not authorized to vote (not an arbiter)",
     category: "dispute",
   },
-  6081: {
+  6094: {
     name: "InsufficientVotes",
     message: "Insufficient votes to resolve",
     category: "dispute",
   },
-  6082: {
+  6095: {
     name: "DisputeAlreadyResolved",
     message: "Dispute has already been resolved",
     category: "dispute",
   },
-  6083: {
+  6096: {
     name: "UnauthorizedResolver",
     message: "Only protocol authority or dispute initiator can resolve disputes",
     category: "dispute",
   },
-  6084: {
+  6097: {
     name: "ActiveDisputeVotes",
     message: "Agent has active dispute votes pending resolution",
     category: "dispute",
   },
-  6085: {
+  6098: {
     name: "RecentVoteActivity",
     message: "Agent must wait 24 hours after voting before deregistering",
     category: "dispute",
   },
-  6086: {
+  6099: {
     name: "AuthorityAlreadyVoted",
     message: "Authority has already voted on this dispute",
     category: "dispute",
   },
-  6087: {
+  6100: {
     name: "InsufficientEvidence",
     message: "Insufficient dispute evidence provided",
     category: "dispute",
   },
-  6088: {
+  6101: {
     name: "EvidenceTooLong",
     message: "Dispute evidence exceeds maximum allowed length",
     category: "dispute",
   },
-  6089: {
+  6102: {
     name: "DisputeNotExpired",
     message: "Dispute has not expired",
     category: "dispute",
   },
-  6090: {
+  6103: {
     name: "SlashAlreadyApplied",
     message: "Dispute slashing already applied",
     category: "dispute",
   },
-  6091: {
+  6104: {
     name: "SlashWindowExpired",
     message: "Slash window expired: must apply slashing within 7 days of resolution",
     category: "dispute",
   },
-  6092: {
+  6105: {
     name: "DisputeNotResolved",
     message: "Dispute has not been resolved",
     category: "dispute",
   },
-  6093: {
+  6106: {
     name: "NotTaskParticipant",
     message: "Only task creator or workers can initiate disputes",
     category: "dispute",
   },
-  6094: {
+  6107: {
     name: "InvalidEvidenceHash",
     message: "Invalid evidence hash: cannot be all zeros",
     category: "dispute",
   },
-  6095: {
+  6108: {
     name: "ArbiterIsDisputeParticipant",
     message: "Arbiter cannot vote on disputes they are a participant in",
     category: "dispute",
   },
-  6096: {
+  6109: {
     name: "InsufficientQuorum",
     message: "Insufficient quorum: minimum number of voters not reached",
     category: "dispute",
   },
-  6097: {
+  6110: {
     name: "ActiveDisputesExist",
     message: "Agent has active disputes as defendant and cannot deregister",
     category: "dispute",
   },
-  6098: {
+  6111: {
     name: "TooManyDisputeVoters",
     message: "Dispute has reached maximum voter capacity",
     category: "dispute",
   },
-  6099: {
+  6112: {
     name: "WorkerAgentRequired",
     message: "Worker agent account required when creator initiates dispute",
     category: "dispute",
   },
-  6100: {
+  6113: {
     name: "WorkerClaimRequired",
     message: "Worker claim account required when creator initiates dispute",
     category: "dispute",
   },
-  6101: {
+  6114: {
     name: "WorkerNotInDispute",
     message: "Worker was not involved in this dispute",
     category: "dispute",
   },
-  6102: {
+  6115: {
     name: "InitiatorCannotResolve",
     message: "Dispute initiator cannot resolve their own dispute",
     category: "dispute",
   },
-  6103: {
+  6116: {
     name: "VersionMismatch",
     message: "State version mismatch (concurrent modification)",
     category: "state",
   },
-  6104: {
+  6117: {
     name: "StateKeyExists",
     message: "State key already exists",
     category: "state",
   },
-  6105: {
+  6118: {
     name: "StateNotFound",
     message: "State not found",
     category: "state",
   },
-  6106: {
+  6119: {
     name: "InvalidStateValue",
     message: "Invalid state value: state_value cannot be all zeros",
     category: "state",
   },
-  6107: {
+  6120: {
     name: "StateOwnershipViolation",
     message: "State ownership violation: only the creator agent can update this state",
     category: "state",
   },
-  6108: {
+  6121: {
     name: "InvalidStateKey",
     message: "Invalid state key: state_key cannot be all zeros",
     category: "state",
   },
-  6109: {
+  6122: {
     name: "ProtocolAlreadyInitialized",
     message: "Protocol is already initialized",
     category: "protocol",
   },
-  6110: {
+  6123: {
     name: "ProtocolNotInitialized",
     message: "Protocol is not initialized",
     category: "protocol",
   },
-  6111: {
+  6124: {
     name: "InvalidProtocolFee",
     message: "Invalid protocol fee (must be <= 1000 bps)",
     category: "protocol",
   },
-  6112: {
+  6125: {
     name: "InvalidTreasury",
     message: "Invalid treasury: treasury account cannot be default pubkey",
     category: "protocol",
   },
-  6113: {
+  6126: {
     name: "InvalidDisputeThreshold",
     message: "Invalid dispute threshold: must be 1-100 (percentage of votes required)",
     category: "protocol",
   },
-  6114: {
+  6127: {
     name: "InsufficientStake",
     message: "Insufficient stake for arbiter registration",
     category: "protocol",
   },
-  6115: {
+  6128: {
     name: "MultisigInvalidThreshold",
     message: "Invalid multisig threshold",
     category: "protocol",
   },
-  6116: {
+  6129: {
     name: "MultisigInvalidSigners",
     message: "Invalid multisig signer configuration",
     category: "protocol",
   },
-  6117: {
+  6130: {
     name: "MultisigNotEnoughSigners",
     message: "Not enough multisig signers",
     category: "protocol",
   },
-  6118: {
+  6131: {
     name: "MultisigDuplicateSigner",
     message: "Duplicate multisig signer provided",
     category: "protocol",
   },
-  6119: {
+  6132: {
     name: "MultisigDefaultSigner",
     message: "Multisig signer cannot be default pubkey",
     category: "protocol",
   },
-  6120: {
+  6133: {
     name: "MultisigSignerNotSystemOwned",
     message: "Multisig signer account not owned by System Program",
     category: "protocol",
   },
-  6121: {
+  6134: {
     name: "InvalidInput",
     message: "Invalid input parameter",
     category: "general",
   },
-  6122: {
+  6135: {
     name: "ArithmeticOverflow",
     message: "Arithmetic overflow",
     category: "general",
   },
-  6123: {
+  6136: {
     name: "VoteOverflow",
     message: "Vote count overflow",
     category: "general",
   },
-  6124: {
+  6137: {
     name: "InsufficientFunds",
     message: "Insufficient funds",
     category: "general",
   },
-  6125: {
+  6138: {
     name: "RewardTooSmall",
     message: "Reward too small: worker must receive at least 1 lamport",
     category: "general",
   },
-  6126: {
+  6139: {
     name: "CorruptedData",
     message: "Account data is corrupted",
     category: "general",
   },
-  6127: {
+  6140: {
     name: "StringTooLong",
     message: "String too long",
     category: "general",
   },
-  6128: {
+  6141: {
     name: "InvalidAccountOwner",
     message: "Account owner validation failed: account not owned by this program",
     category: "general",
   },
-  6129: {
+  6142: {
     name: "RateLimitExceeded",
     message: "Rate limit exceeded: maximum actions per 24h window reached",
     category: "rate_limit",
   },
-  6130: {
+  6143: {
     name: "CooldownNotElapsed",
     message: "Cooldown period has not elapsed since last action",
     category: "rate_limit",
   },
-  6131: {
+  6144: {
     name: "UpdateTooFrequent",
     message: "Agent update too frequent: must wait cooldown period",
     category: "rate_limit",
   },
-  6132: {
+  6145: {
     name: "InvalidCooldown",
     message: "Cooldown value cannot be negative",
     category: "rate_limit",
   },
-  6133: {
+  6146: {
     name: "CooldownTooLarge",
     message: "Cooldown value exceeds maximum (24 hours)",
     category: "rate_limit",
   },
-  6134: {
+  6147: {
     name: "RateLimitTooHigh",
     message: "Rate limit value exceeds maximum allowed (1000)",
     category: "rate_limit",
   },
-  6135: {
+  6148: {
     name: "CooldownTooLong",
     message: "Cooldown value exceeds maximum allowed (1 week)",
     category: "rate_limit",
   },
-  6136: {
+  6149: {
     name: "InsufficientStakeForDispute",
     message: "Insufficient stake to initiate dispute",
     category: "rate_limit",
   },
-  6137: {
+  6150: {
     name: "InsufficientStakeForCreatorDispute",
     message: "Creator-initiated disputes require 2x the minimum stake",
     category: "rate_limit",
   },
-  6138: {
+  6151: {
     name: "VersionMismatchProtocol",
     message: "Protocol version mismatch: account version incompatible with current program",
     category: "version",
   },
-  6139: {
+  6152: {
     name: "AccountVersionTooOld",
     message: "Account version too old: migration required",
     category: "version",
   },
-  6140: {
+  6153: {
     name: "AccountVersionTooNew",
     message: "Account version too new: program upgrade required",
     category: "version",
   },
-  6141: {
+  6154: {
     name: "InvalidMigrationSource",
     message: "Migration not allowed: invalid source version",
     category: "version",
   },
-  6142: {
+  6155: {
     name: "InvalidMigrationTarget",
     message: "Migration not allowed: invalid target version",
     category: "version",
   },
-  6143: {
+  6156: {
     name: "UnauthorizedUpgrade",
     message: "Only upgrade authority can perform this action",
     category: "version",
   },
-  6144: {
+  6157: {
     name: "UnauthorizedProtocolAuthority",
     message: "Only protocol authority can perform this action",
     category: "protocol",
   },
-  6145: {
+  6158: {
     name: "InvalidMinVersion",
     message: "Minimum version cannot exceed current protocol version",
     category: "version",
   },
-  6146: {
+  6159: {
     name: "ProtocolConfigRequired",
     message: "Protocol config account required: suspending an agent requires the protocol config PDA in remaining_accounts",
     category: "protocol",
   },
-  6147: {
+  6160: {
     name: "ParentTaskCancelled",
     message: "Parent task has been cancelled",
     category: "dependency",
   },
-  6148: {
+  6161: {
     name: "ParentTaskDisputed",
     message: "Parent task is in disputed state",
     category: "dependency",
   },
-  6149: {
+  6162: {
     name: "InvalidDependencyType",
     message: "Invalid dependency type",
     category: "dependency",
   },
-  6150: {
+  6163: {
     name: "ParentTaskNotCompleted",
     message: "Parent task must be completed before completing a proof-dependent task",
     category: "dependency",
   },
-  6151: {
+  6164: {
     name: "ParentTaskAccountRequired",
     message: "Parent task account required for proof-dependent task completion",
     category: "dependency",
   },
-  6152: {
+  6165: {
     name: "UnauthorizedCreator",
     message: "Parent task does not belong to the same creator",
     category: "dependency",
   },
-  6153: {
+  6166: {
     name: "NullifierAlreadySpent",
     message: "Nullifier has already been spent - proof/knowledge reuse detected",
     category: "nullifier",
   },
-  6154: {
+  6167: {
     name: "InvalidNullifier",
     message: "Invalid nullifier: nullifier value cannot be all zeros",
     category: "nullifier",
   },
-  6155: {
+  6168: {
     name: "IncompleteWorkerAccounts",
     message: "All worker accounts must be provided when cancelling a task with active claims",
     category: "cancel",
   },
-  6156: {
+  6169: {
     name: "WorkerAccountsRequired",
     message: "Worker accounts required when task has active workers",
     category: "cancel",
   },
-  6157: {
+  6170: {
     name: "DuplicateArbiter",
     message: "Duplicate arbiter provided in remaining_accounts",
     category: "duplicate",
   },
-  6158: {
+  6171: {
     name: "InsufficientEscrowBalance",
     message: "Escrow has insufficient balance for reward transfer",
     category: "escrow",
   },
-  6159: {
+  6172: {
     name: "InvalidStatusTransition",
     message: "Invalid task status transition",
     category: "status",
   },
-  6160: {
+  6173: {
     name: "StakeTooLow",
     message: "Stake value is below minimum required (0.001 SOL)",
     category: "stake",
   },
-  6161: {
+  6174: {
     name: "InvalidMinStake",
     message: "min_stake_for_dispute must be greater than zero",
     category: "stake",
   },
-  6162: {
+  6175: {
     name: "InvalidSlashAmount",
     message: "Slash amount must be greater than zero",
     category: "stake",
   },
-  6163: {
+  6176: {
     name: "BondAmountTooLow",
     message: "Bond amount too low",
     category: "bond",
   },
-  6164: {
+  6177: {
     name: "BondAlreadyExists",
     message: "Bond already exists",
     category: "bond",
   },
-  6165: {
+  6178: {
     name: "BondNotFound",
     message: "Bond not found",
     category: "bond",
   },
-  6166: {
+  6179: {
     name: "BondNotMatured",
     message: "Bond not yet matured",
     category: "bond",
   },
-  6167: {
+  6180: {
     name: "InsufficientReputation",
     message: "Agent reputation below task minimum requirement",
     category: "reputation",
   },
-  6168: {
+  6181: {
     name: "InvalidMinReputation",
     message: "Invalid minimum reputation: must be <= 10000",
     category: "reputation",
   },
-  6169: {
+  6182: {
     name: "DevelopmentKeyNotAllowed",
     message: "Development verifying key detected (gamma == delta). ZK proofs are forgeable. Run MPC ceremony before use.",
     category: "security",
   },
-  6170: {
+  6183: {
     name: "SelfTaskNotAllowed",
     message: "Cannot claim own task: worker authority matches task creator",
     category: "security",
   },
-  6171: {
+  6184: {
     name: "MissingTokenAccounts",
     message: "Token accounts not provided for token-denominated task",
     category: "token",
   },
-  6172: {
+  6185: {
     name: "InvalidTokenEscrow",
     message: "Token escrow ATA does not match expected derivation",
     category: "token",
   },
-  6173: {
+  6186: {
     name: "InvalidTokenMint",
     message: "Provided mint does not match task's reward_mint",
     category: "token",
   },
-  6174: {
+  6187: {
     name: "TokenTransferFailed",
     message: "SPL token transfer CPI failed",
     category: "token",
   },
-  6175: {
+  6188: {
     name: "ProposalNotActive",
     message: "Proposal is not active",
     category: "governance",
   },
-  6176: {
+  6189: {
     name: "ProposalVotingNotEnded",
     message: "Voting period has not ended",
     category: "governance",
   },
-  6177: {
+  6190: {
     name: "ProposalVotingEnded",
     message: "Voting period has ended",
     category: "governance",
   },
-  6178: {
+  6191: {
     name: "ProposalAlreadyExecuted",
     message: "Proposal has already been executed",
     category: "governance",
   },
-  6179: {
+  6192: {
     name: "ProposalInsufficientQuorum",
     message: "Insufficient quorum for proposal execution",
     category: "governance",
   },
-  6180: {
+  6193: {
     name: "ProposalNotApproved",
     message: "Proposal did not achieve majority",
     category: "governance",
   },
-  6181: {
+  6194: {
     name: "ProposalUnauthorizedCancel",
     message: "Only the proposer can cancel this proposal",
     category: "governance",
   },
-  6182: {
+  6195: {
     name: "ProposalInsufficientStake",
     message: "Insufficient stake to create a proposal",
     category: "governance",
   },
-  6183: {
+  6196: {
     name: "InvalidProposalPayload",
     message: "Invalid proposal payload",
     category: "governance",
   },
-  6184: {
+  6197: {
     name: "InvalidProposalType",
     message: "Invalid proposal type",
     category: "governance",
   },
-  6185: {
+  6198: {
     name: "TreasuryInsufficientBalance",
     message: "Treasury spend amount exceeds available balance",
     category: "governance",
   },
-  6186: {
+  6199: {
     name: "TimelockNotElapsed",
     message: "Execution timelock has not elapsed",
     category: "governance",
   },
-  6187: {
+  6200: {
     name: "InvalidGovernanceParam",
     message: "Invalid governance configuration parameter",
     category: "governance",
   },
-  6188: {
+  6201: {
     name: "TreasuryNotProgramOwned",
     message: "Treasury must be a program-owned PDA",
     category: "governance",
   },
-  6189: {
+  6202: {
     name: "TreasuryNotSpendable",
     message: "Treasury must be program-owned, or a signer system account for governance spends",
     category: "governance",
   },
-  6190: {
+  6203: {
     name: "SkillInvalidId",
     message: "Skill ID cannot be all zeros",
     category: "skill",
   },
-  6191: {
+  6204: {
     name: "SkillInvalidName",
     message: "Skill name cannot be all zeros",
     category: "skill",
   },
-  6192: {
+  6205: {
     name: "SkillInvalidContentHash",
     message: "Skill content hash cannot be all zeros",
     category: "skill",
   },
-  6193: {
+  6206: {
     name: "SkillNotActive",
     message: "Skill is not active",
     category: "skill",
   },
-  6194: {
+  6207: {
     name: "SkillInvalidRating",
     message: "Rating must be between 1 and 5",
     category: "skill",
   },
-  6195: {
+  6208: {
     name: "SkillSelfRating",
     message: "Cannot rate own skill",
     category: "skill",
   },
-  6196: {
+  6209: {
     name: "SkillUnauthorizedUpdate",
     message: "Only the skill author can update this skill",
     category: "skill",
   },
-  6197: {
+  6210: {
     name: "SkillSelfPurchase",
     message: "Cannot purchase own skill",
     category: "skill",
   },
-  6198: {
+  6211: {
     name: "FeedInvalidContentHash",
     message: "Feed content hash cannot be all zeros",
     category: "feed",
   },
-  6199: {
+  6212: {
     name: "FeedInvalidTopic",
     message: "Feed topic cannot be all zeros",
     category: "feed",
   },
-  6200: {
+  6213: {
     name: "FeedPostNotFound",
     message: "Feed post not found",
     category: "feed",
   },
-  6201: {
+  6214: {
     name: "FeedSelfUpvote",
     message: "Cannot upvote own post",
     category: "feed",
   },
-  6202: {
+  6215: {
     name: "ReputationStakeAmountTooLow",
     message: "Reputation stake amount must be greater than zero",
     category: "reputation",
   },
-  6203: {
+  6216: {
     name: "ReputationStakeLocked",
     message: "Reputation stake is locked: withdrawal before cooldown",
     category: "reputation",
   },
-  6204: {
+  6217: {
     name: "ReputationStakeInsufficientBalance",
     message: "Reputation stake has insufficient balance for withdrawal",
     category: "reputation",
   },
-  6205: {
+  6218: {
     name: "ReputationDelegationAmountInvalid",
     message: "Reputation delegation amount invalid: must be > 0, <= 10000, and >= MIN_DELEGATION_AMOUNT",
     category: "reputation",
   },
-  6206: {
+  6219: {
     name: "ReputationCannotDelegateSelf",
     message: "Cannot delegate reputation to self",
     category: "reputation",
   },
-  6207: {
+  6220: {
     name: "ReputationDelegationExpired",
     message: "Reputation delegation has expired",
     category: "reputation",
   },
-  6208: {
+  6221: {
     name: "ReputationAgentNotActive",
     message: "Agent must be Active to participate in reputation economy",
     category: "reputation",
   },
-  6209: {
+  6222: {
     name: "ReputationDisputesPending",
     message: "Agent has pending disputes as defendant: cannot withdraw stake",
     category: "reputation",
   },
-  6210: {
+  6223: {
     name: "PrivateTaskRequiresZkProof",
     message: "Private tasks (non-zero constraint_hash) must use complete_task_private",
     category: "task",
   },
-  6211: {
+  6224: {
     name: "InvalidTokenAccountOwner",
     message: "Token account owner does not match expected authority",
     category: "token",
   },
-  6212: {
+  6225: {
     name: "InsufficientSeedEntropy",
     message: "Binding or nullifier seed has insufficient byte diversity (min 8 distinct bytes required)",
     category: "nullifier",
   },
-  6213: {
+  6226: {
     name: "SkillPriceBelowMinimum",
     message: "Skill price below minimum required",
     category: "skill",
   },
-  6214: {
+  6227: {
     name: "SkillPriceChanged",
     message: "Skill price changed since transaction was prepared",
     category: "skill",
   },
-  6215: {
+  6228: {
     name: "DelegationCooldownNotElapsed",
     message: "Delegation must be active for minimum duration before revocation",
     category: "reputation",
   },
-  6216: {
+  6229: {
     name: "RateLimitBelowMinimum",
     message: "Rate limit value below protocol minimum",
     category: "rate_limit",

@@ -6,8 +6,13 @@ import {
   expireClaim,
   completeTask,
   completeTaskPrivate,
+  configureTaskValidation,
+  submitTaskResult,
+  acceptTaskResult,
+  rejectTaskResult,
   cancelTask,
   getTask,
+  TaskValidationMode,
   computeHashes,
   bigintToBytes32,
   buildJournalBytes,
@@ -99,6 +104,43 @@ describe("SDK contract tests", () => {
     expect(result.txSignature).toBe("tx-create-task");
   });
 
+  it("returns stable contract for configureTaskValidation", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(
+      ["configureTaskValidation"],
+      "tx-configure-task-validation",
+    ) as never;
+    const creator = makeKeypair(80);
+    const taskPda = createPublicKeySeeded(81);
+
+    const result = await configureTaskValidation(
+      connection,
+      program as never,
+      creator,
+      taskPda,
+      {
+        mode: TaskValidationMode.CreatorReview,
+        reviewWindowSecs: 3600,
+      },
+    );
+
+    expect(result).toHaveProperty("taskValidationConfigPda");
+    expect(result.taskValidationConfigPda).toBeInstanceOf(PublicKey);
+    expect(result).toHaveProperty(
+      "txSignature",
+      "tx-configure-task-validation",
+    );
+
+    const builder = (program as any).methods.configureTaskValidation.mock.results[0]
+      .value;
+    expect(builder.accountsPartial).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: taskPda,
+        creator: creator.publicKey,
+      }),
+    );
+  });
+
   it("returns stable contract for claimTask", async () => {
     const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
     const program = makeProgram(["claimTask"], "tx-claim-task") as never;
@@ -117,6 +159,41 @@ describe("SDK contract tests", () => {
 
     expect(result).toEqual({ txSignature: "tx-claim-task" });
     expect(result.txSignature).toMatch(/\S+/);
+  });
+
+  it("returns stable contract for submitTaskResult", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(
+      ["submitTaskResult"],
+      "tx-submit-task-result",
+    ) as never;
+    const worker = makeKeypair(82);
+    const taskPda = createPublicKeySeeded(83);
+    const workerId = new Uint8Array(32);
+    workerId.fill(82);
+
+    const result = await submitTaskResult(
+      connection,
+      program as never,
+      worker,
+      workerId,
+      taskPda,
+      {
+        proofHash: new Uint8Array(32).fill(7),
+        resultData: new Uint8Array(64).fill(8),
+      },
+    );
+
+    expect(result).toHaveProperty("taskSubmissionPda");
+    expect(result.taskSubmissionPda).toBeInstanceOf(PublicKey);
+    expect(result).toHaveProperty("txSignature", "tx-submit-task-result");
+
+    const submitTaskResultMock = (program as any).methods
+      .submitTaskResult as ReturnType<typeof vi.fn>;
+    expect(submitTaskResultMock).toHaveBeenCalledOnce();
+    expect(submitTaskResultMock.mock.calls[0][0]).toHaveLength(32);
+    expect(submitTaskResultMock.mock.calls[0][1]).toBeInstanceOf(Buffer);
+    expect(submitTaskResultMock.mock.calls[0][1]).toHaveLength(64);
   });
 
   it("appends Marketplace V2 remaining accounts for expireClaim", async () => {
@@ -416,6 +493,142 @@ describe("SDK contract tests", () => {
       { pubkey: bidderMarketState, isSigner: false, isWritable: true },
       { pubkey: bidderAuthority, isSigner: false, isWritable: true },
     ]);
+  });
+
+  it("returns stable contract for acceptTaskResult", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(
+      ["acceptTaskResult"],
+      "tx-accept-task-result",
+    ) as never;
+    const reviewer = makeKeypair(90);
+    const taskPda = createPublicKeySeeded(91);
+    const workerId = new Uint8Array(32);
+    workerId.fill(92);
+    const creator = createPublicKeySeeded(93);
+    const treasury = createPublicKeySeeded(94);
+    const workerAuthority = createPublicKeySeeded(95);
+
+    mockGetAccount({
+      creator,
+      rewardMint: null,
+    } as never);
+    mockGetAccount({
+      treasury,
+    } as never);
+    mockGetAccount({
+      authority: workerAuthority,
+    } as never);
+
+    const result = await acceptTaskResult(
+      connection,
+      program as never,
+      reviewer,
+      workerId,
+      taskPda,
+    );
+
+    expect(result).toEqual({ txSignature: "tx-accept-task-result" });
+
+    const builder = (program as any).methods.acceptTaskResult.mock.results[0]
+      .value;
+    expect(builder.accountsPartial).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: taskPda,
+        creator,
+        treasury,
+        workerAuthority,
+        reviewer: reviewer.publicKey,
+      }),
+    );
+  });
+
+  it("appends proof dependency and accepted bid settlement for acceptTaskResult", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(
+      ["acceptTaskResult"],
+      "tx-accept-task-result-v2",
+    ) as never;
+    const reviewer = makeKeypair(96);
+    const taskPda = createPublicKeySeeded(97);
+    const workerId = new Uint8Array(32);
+    workerId.fill(98);
+    const parentTaskPda = createPublicKeySeeded(99);
+    const bidBook = createPublicKeySeeded(100);
+    const acceptedBid = createPublicKeySeeded(101);
+    const bidderMarketState = createPublicKeySeeded(102);
+    const workerAuthority = createPublicKeySeeded(103);
+
+    mockGetAccount({
+      creator: createPublicKeySeeded(104),
+      rewardMint: null,
+    } as never);
+    mockGetAccount({
+      treasury: createPublicKeySeeded(105),
+    } as never);
+    mockGetAccount({
+      authority: workerAuthority,
+    } as never);
+
+    await acceptTaskResult(
+      connection,
+      program as never,
+      reviewer,
+      workerId,
+      taskPda,
+      {
+        parentTaskPda,
+        acceptedBidSettlement: {
+          bidBook,
+          acceptedBid,
+          bidderMarketState,
+        },
+      },
+    );
+
+    const builder = (program as any).methods.acceptTaskResult.mock.results[0]
+      .value;
+    expect(builder.remainingAccounts).toHaveBeenCalledWith([
+      { pubkey: parentTaskPda, isSigner: false, isWritable: false },
+      { pubkey: bidBook, isSigner: false, isWritable: true },
+      { pubkey: acceptedBid, isSigner: false, isWritable: true },
+      { pubkey: bidderMarketState, isSigner: false, isWritable: true },
+      { pubkey: workerAuthority, isSigner: false, isWritable: true },
+    ]);
+  });
+
+  it("returns stable contract for rejectTaskResult", async () => {
+    const connection = { confirmTransaction: vi.fn() } as unknown as Connection;
+    const program = makeProgram(
+      ["rejectTaskResult"],
+      "tx-reject-task-result",
+    ) as never;
+    const creator = makeKeypair(106);
+    const taskPda = createPublicKeySeeded(107);
+    const workerId = new Uint8Array(32);
+    workerId.fill(108);
+
+    const result = await rejectTaskResult(
+      connection,
+      program as never,
+      creator,
+      workerId,
+      taskPda,
+      {
+        rejectionHash: new Uint8Array(32).fill(9),
+      },
+    );
+
+    expect(result).toEqual({ txSignature: "tx-reject-task-result" });
+
+    const builder = (program as any).methods.rejectTaskResult.mock.results[0]
+      .value;
+    expect(builder.accountsPartial).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: taskPda,
+        creator: creator.publicKey,
+      }),
+    );
   });
 
   it("appends Marketplace V2 cleanup accounts for cancelTask", async () => {

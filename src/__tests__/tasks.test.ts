@@ -12,10 +12,15 @@ import { describe, it, expect } from "vitest";
 import { PublicKey, Keypair } from "@solana/web3.js";
 import {
   TaskState,
+  TaskValidationMode,
+  TaskSubmissionStatus,
   formatTaskState,
   deriveTaskPda,
   deriveClaimPda,
+  deriveTaskValidationConfigPda,
+  deriveTaskSubmissionPda,
   deriveEscrowPda,
+  deriveAuthorityRateLimitPda,
   calculateEscrowFee,
 } from "../tasks";
 import { PROGRAM_ID, SEEDS } from "../constants";
@@ -78,6 +83,34 @@ describe("TaskState enum", () => {
 
       expect(numericValues).toEqual([0, 1, 2, 3, 4, 5]);
     });
+  });
+});
+
+describe("TaskValidationMode enum", () => {
+  it("Auto equals 0", () => {
+    expect(TaskValidationMode.Auto).toBe(0);
+  });
+
+  it("CreatorReview equals 1", () => {
+    expect(TaskValidationMode.CreatorReview).toBe(1);
+  });
+});
+
+describe("TaskSubmissionStatus enum", () => {
+  it("Idle equals 0", () => {
+    expect(TaskSubmissionStatus.Idle).toBe(0);
+  });
+
+  it("Submitted equals 1", () => {
+    expect(TaskSubmissionStatus.Submitted).toBe(1);
+  });
+
+  it("Accepted equals 2", () => {
+    expect(TaskSubmissionStatus.Accepted).toBe(2);
+  });
+
+  it("Rejected equals 3", () => {
+    expect(TaskSubmissionStatus.Rejected).toBe(3);
   });
 });
 
@@ -193,6 +226,48 @@ describe("PDA derivation", () => {
 
       const [expected] = PublicKey.findProgramAddressSync(
         [SEEDS.ESCROW, taskPda.toBuffer()],
+        PROGRAM_ID,
+      );
+      expect(result.equals(expected)).toBe(true);
+    });
+  });
+
+  describe("deriveTaskValidationConfigPda", () => {
+    it('uses correct seeds: ["task_validation", taskPda]', () => {
+      const taskPda = Keypair.generate().publicKey;
+
+      const result = deriveTaskValidationConfigPda(taskPda);
+
+      const [expected] = PublicKey.findProgramAddressSync(
+        [SEEDS.TASK_VALIDATION, taskPda.toBuffer()],
+        PROGRAM_ID,
+      );
+      expect(result.equals(expected)).toBe(true);
+    });
+  });
+
+  describe("deriveTaskSubmissionPda", () => {
+    it('uses correct seeds: ["task_submission", claimPda]', () => {
+      const claimPda = Keypair.generate().publicKey;
+
+      const result = deriveTaskSubmissionPda(claimPda);
+
+      const [expected] = PublicKey.findProgramAddressSync(
+        [SEEDS.TASK_SUBMISSION, claimPda.toBuffer()],
+        PROGRAM_ID,
+      );
+      expect(result.equals(expected)).toBe(true);
+    });
+  });
+
+  describe("deriveAuthorityRateLimitPda", () => {
+    it('uses correct seeds: ["authority_rate_limit", authority]', () => {
+      const authority = Keypair.generate().publicKey;
+
+      const result = deriveAuthorityRateLimitPda(authority);
+
+      const [expected] = PublicKey.findProgramAddressSync(
+        [SEEDS.AUTHORITY_RATE_LIMIT, authority.toBuffer()],
         PROGRAM_ID,
       );
       expect(result.equals(expected)).toBe(true);
