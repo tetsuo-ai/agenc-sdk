@@ -19,6 +19,6 @@ This is the developer-documentation entrypoint for `agenc-sdk`.
 
 - I need the repo layout: [CODEBASE_MAP.md](./CODEBASE_MAP.md)
 - I need the exported API families: [MODULE_INDEX.md](./MODULE_INDEX.md)
+- I need reviewed task-validation helpers: [MODULE_INDEX.md](./MODULE_INDEX.md)
 - I need release or CI commands: [MAINTAINER_GUIDE.md](./MAINTAINER_GUIDE.md)
 - I need a runnable example: [examples/private-task-demo/README.md](../examples/private-task-demo/README.md)
-

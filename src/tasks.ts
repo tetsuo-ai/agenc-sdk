@@ -1422,7 +1422,7 @@ export async function configureTaskValidation(
 }
 
 /**
- * Submit a worker result for Task Validation V2 creator review.
+ * Submit a worker result for Task Validation V2 manual validation.
  */
 export async function submitTaskResult(
   connection: Connection,

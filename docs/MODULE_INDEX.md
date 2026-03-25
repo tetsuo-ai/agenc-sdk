@@ -15,7 +15,7 @@ Everything else in the repo is support material, tests, examples, or release too
 
 - `generateProof`, `computeHashes`, `generateSalt`
 - `runProofSubmissionPreflight`
-- `completeTaskPrivateSafe`
+- `completeTaskPrivateWithPreflight`, `completeTaskPrivateSafe`
 - `ProverConfig`, `RemoteProverConfig`, `ProverError`
 
 Use this family for private completion payload construction, prover transport wiring, and client-side safety checks before submission.
@@ -23,9 +23,13 @@ Use this family for private completion payload construction, prover transport wi
 ### Task lifecycle
 
 - `createTask`, `createDependentTask`, `claimTask`, `expireClaim`
-- `completeTask`, `completeTaskPrivate`, `completeTaskPrivateSafe`
+- `completeTask`, `completeTaskPrivate`, `completeTaskPrivateWithPreflight`, `completeTaskPrivateSafe`
+- `configureTaskValidation`, `submitTaskResult`
+- `acceptTaskResult`, `rejectTaskResult`, `autoAcceptTaskResult`, `validateTaskResult`
 - `cancelTask`, `getTask`, `getTasksByCreator`
 - `deriveTaskPda`, `deriveClaimPda`, `deriveEscrowPda`
+
+Use the explicit Task Validation V2 helpers when a task has been configured for review or attestation. The low-level SDK `completeTask` helper still sends `complete_task` directly and does not auto-route reviewed tasks into `submit_task_result`.
 
 ### Queries and replay-oriented reads
 
@@ -62,6 +66,5 @@ Use `PrivacyClient` when you want one object to wrap common flows. Use the lower
 ## Deprecated And Compatibility Notes
 
 - `validateProofPreconditions` remains exported as a deprecated alias for `runProofSubmissionPreflight`.
-- The canonical safe private-completion helper is `completeTaskPrivateSafe`.
+- `completeTaskPrivateSafe` remains exported as a deprecated compatibility wrapper around `completeTaskPrivateWithPreflight`.
 - Version compatibility state is defined in `src/version.ts` and must stay aligned with `package.json` and released protocol expectations.
-

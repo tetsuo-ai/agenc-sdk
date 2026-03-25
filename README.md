@@ -37,7 +37,7 @@ agenc-sdk/
 ## Public API Families
 
 - Proofs and prover wiring: `proofs.ts`, `prover.ts`, `proof-validation.ts`
-- Task lifecycle and queries: `tasks.ts`, `queries.ts`, `tokens.ts`
+- Task lifecycle, validation flows, and queries: `tasks.ts`, `queries.ts`, `tokens.ts`
 - Agent, dispute, governance, and protocol helpers: `agents.ts`, `disputes.ts`, `governance.ts`, `protocol.ts`, `state.ts`
 - Diagnostics and compatibility: `errors.ts`, `logger.ts`, `process-identity.ts`, `version.ts`
 - Convenience wrapper: `client.ts`
@@ -113,6 +113,23 @@ The SDK derives and submits the required verification accounts:
 - `completeTask(...)`
 - `completeTaskPrivate(...)`
 - `completeTaskPrivateWithPreflight(...)`
+- `configureTaskValidation(...)`
+- `submitTaskResult(...)`
+- `acceptTaskResult(...)`
+- `rejectTaskResult(...)`
+- `autoAcceptTaskResult(...)`
+- `validateTaskResult(...)`
+
+## Task Validation V2
+
+The SDK exposes the full reviewed public-task surface introduced by protocol Task Validation V2.
+
+- `configureTaskValidation(...)` enables creator review, validator quorum, or external attestation on an open public task
+- `submitTaskResult(...)` records a reviewed submission without paying out immediately
+- `acceptTaskResult(...)`, `rejectTaskResult(...)`, and `autoAcceptTaskResult(...)` resolve creator-review tasks
+- `validateTaskResult(...)` records validator-quorum votes and external attestations
+
+Important: raw SDK `completeTask(...)` still calls on-chain `complete_task` directly. It does not auto-route manual-validation tasks into `submit_task_result`. That auto-routing exists in the runtime wrapper, not in the SDK.
 
 ### Preflight validation
 
