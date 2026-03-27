@@ -624,6 +624,13 @@ function buildTaskCompletionRemainingAccounts(
   return metas;
 }
 
+function asOptionalAccounts(
+  accounts: Record<string, PublicKey | null>,
+): Record<string, PublicKey | undefined> {
+  // Anchor accepts null for optional accounts at runtime, but its TS surface only allows undefined.
+  return accounts as unknown as Record<string, PublicKey | undefined>;
+}
+
 function buildExpireClaimRemainingAccounts(
   options: ExpireClaimOptions | undefined,
 ): AccountMeta[] {
@@ -1011,6 +1018,10 @@ export async function expireClaim(
       claim: claimPda,
       worker: workerAgentPda,
       protocolConfig: protocolPda,
+      ...asOptionalAccounts({
+        taskValidationConfig: null,
+        taskSubmission: null,
+      }),
       rentRecipient,
       systemProgram: SystemProgram.programId,
     })

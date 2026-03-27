@@ -40,6 +40,7 @@ export interface InitiateDisputeParams {
   initiatorClaimPda?: PublicKey | null;
   workerAgentPda?: PublicKey | null;
   workerClaimPda?: PublicKey | null;
+  taskSubmissionPda?: PublicKey | null;
   defendantWorkers?: Array<{ claimPda: PublicKey; workerPda: PublicKey }>;
 }
 
@@ -348,6 +349,7 @@ export async function initiateDispute(
         : (params.initiatorClaimPda ?? null),
     workerAgent: params.workerAgentPda ?? null,
     workerClaim: params.workerClaimPda ?? null,
+    taskSubmission: params.taskSubmissionPda ?? null,
   };
 
   builder.accountsPartial({
