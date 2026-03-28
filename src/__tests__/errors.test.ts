@@ -72,11 +72,27 @@ describe("errors", () => {
   it("decodes protocol InsufficientStake with the current devnet/program IDL code", () => {
     const decoded = decodeAnchorError({
       message:
-        "AnchorError thrown in src/instructions/register_agent.rs:69. Error Code: InsufficientStake. Error Number: 6127. Error Message: Insufficient stake for arbiter registration.",
+        "AnchorError thrown in src/instructions/register_agent.rs:69. Error Code: InsufficientStake. Error Number: 6135. Error Message: Insufficient stake for arbiter registration.",
     });
 
     expect(decoded).not.toBeNull();
     expect(decoded?.name).toBe("InsufficientStake");
-    expect(decoded?.message).toBe("Insufficient stake for arbiter registration");
+    expect(decoded?.message).toBe(
+      "Insufficient stake for arbiter registration.",
+    );
+  });
+
+  it("prefers Anchor's named error over a stale numeric mapping", () => {
+    const decoded = decodeAnchorError({
+      logs: [
+        "Program log: AnchorError thrown in src/instructions/register_agent.rs:69. Error Code: InsufficientStake. Error Number: 6135. Error Message: Insufficient stake for arbiter registration.",
+      ],
+      message: "custom program error: 0x17f7",
+    });
+
+    expect(decoded).not.toBeNull();
+    expect(decoded?.code).toBe(6135);
+    expect(decoded?.name).toBe("InsufficientStake");
+    expect(decoded?.message).toBe("Insufficient stake for arbiter registration.");
   });
 });
