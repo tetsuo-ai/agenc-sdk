@@ -1195,6 +1195,11 @@ export interface DecodedError extends CoordinationErrorEntry {
   code: number;
 }
 
+const COORDINATION_ERROR_NAME_MAP: Record<string, CoordinationErrorEntry> =
+  Object.fromEntries(
+    Object.values(COORDINATION_ERROR_MAP).map((entry) => [entry.name, entry]),
+  );
+
 /**
  * Decode a numeric Anchor error code.
  */
@@ -1250,10 +1255,54 @@ function extractCode(error: unknown): number | null {
   return null;
 }
 
+function extractNamedAnchorError(
+  error: unknown,
+): Pick<DecodedError, "code" | "name" | "message" | "category"> | null {
+  if (!error || typeof error !== "object") return null;
+
+  const err = error as Record<string, unknown>;
+  const candidates = [
+    ...(Array.isArray(err.logs) ? err.logs.filter((line) => typeof line === "string") : []),
+    ...(Array.isArray(err.errorLogs)
+      ? err.errorLogs.filter((line) => typeof line === "string")
+      : []),
+    ...(typeof err.message === "string" ? [err.message] : []),
+  ];
+
+  for (const candidate of candidates) {
+    const match = candidate.match(
+      /Error Code: ([A-Za-z0-9_]+)\. Error Number: (\d+)\. Error Message: (.+)/,
+    );
+    if (!match) {
+      continue;
+    }
+
+    const [, name, numericCode, message] = match;
+    const entry = COORDINATION_ERROR_NAME_MAP[name];
+    if (!entry) {
+      continue;
+    }
+
+    return {
+      code: Number.parseInt(numericCode, 10),
+      name: entry.name,
+      message,
+      category: entry.category,
+    };
+  }
+
+  return null;
+}
+
 /**
  * Decode common Anchor error object shapes.
  */
 export function decodeAnchorError(error: unknown): DecodedError | null {
+  const named = extractNamedAnchorError(error);
+  if (named) {
+    return named;
+  }
+
   const code = extractCode(error);
   if (code === null) return null;
   return decodeError(code);
