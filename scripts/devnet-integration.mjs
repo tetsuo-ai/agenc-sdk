@@ -6,12 +6,12 @@ import crypto from "node:crypto";
 import { Connection, Keypair } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import * as sdk from "../dist/index.mjs";
+import { resolveIdlPath } from "./devnet-helpers.mjs";
 
 const DEFAULT_RPC_URL = process.env.AGENC_RPC_URL ?? sdk.DEVNET_RPC;
 const DEFAULT_COMMITMENT = "confirmed";
 const DEFAULT_REWARD_LAMPORTS = 10_000_000n; // 0.01 SOL
 const DEFAULT_AGENT_ENDPOINT = "https://example.invalid/agenc-devnet-test";
-const DEFAULT_IDL_PATH = "/Users/pchmirenko/AgenC-pr1469-fix/runtime/idl/agenc_coordination.json";
 
 function usage() {
   process.stdout.write(`Usage:
@@ -22,7 +22,7 @@ Environment:
   WORKER_WALLET           Required. Solana keypair JSON for task worker.
   AGENC_RPC_URL           Optional. Defaults to ${DEFAULT_RPC_URL}
   AGENC_REWARD_LAMPORTS   Optional. Defaults to ${DEFAULT_REWARD_LAMPORTS.toString()}
-  AGENC_IDL_PATH          Optional. Defaults to ${DEFAULT_IDL_PATH}
+  AGENC_IDL_PATH          Required. Path to agenc_coordination.json
 
 What this validates:
   1. Reads protocol config from devnet
@@ -126,7 +126,7 @@ async function main() {
   const rewardLamports = BigInt(
     process.env.AGENC_REWARD_LAMPORTS ?? DEFAULT_REWARD_LAMPORTS.toString(),
   );
-  const idlPath = process.env.AGENC_IDL_PATH ?? DEFAULT_IDL_PATH;
+  const idlPath = resolveIdlPath();
 
   console.log(`[config] rpc: ${rpcUrl}`);
   console.log(`[config] creator wallet: ${creatorWalletPath}`);

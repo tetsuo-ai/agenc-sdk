@@ -200,6 +200,18 @@ Funding notes:
 - `test:devnet:reputation`: the delegator needs agent stake plus
   `AGENC_REPUTATION_STAKE_LAMPORTS`; the delegatee needs enough SOL to register.
 
+### Public task flow
+
+```bash
+CREATOR_WALLET=/path/to/creator.json \
+WORKER_WALLET=/path/to/worker.json \
+npm run test:devnet:public
+```
+
+This validates the happy-path public lifecycle `register -> create -> claim -> complete`.
+`AGENC_IDL_PATH` must be set explicitly so the validator runs against the intended
+protocol build instead of a machine-local fallback.
+
 ### Deep public task flow
 
 ```bash
