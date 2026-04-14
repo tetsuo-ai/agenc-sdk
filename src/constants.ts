@@ -118,6 +118,9 @@ export const RECOMMENDED_CU_CREATE_DEPENDENT_TASK = 60_000;
 /** CU budget for claim_task instruction */
 export const RECOMMENDED_CU_CLAIM_TASK = 45_000;
 
+/** CU budget for claim_task_with_job_spec instruction */
+export const RECOMMENDED_CU_CLAIM_TASK_WITH_JOB_SPEC = 50_000;
+
 /** CU budget for expire_claim instruction */
 export const RECOMMENDED_CU_EXPIRE_CLAIM = 40_000;
 
@@ -129,6 +132,9 @@ export const RECOMMENDED_CU_COMPLETE_TASK_PRIVATE = 200_000;
 
 /** CU budget for configure_task_validation instruction */
 export const RECOMMENDED_CU_CONFIGURE_TASK_VALIDATION = 40_000;
+
+/** CU budget for set_task_job_spec instruction */
+export const RECOMMENDED_CU_SET_TASK_JOB_SPEC = 30_000;
 
 /** CU budget for submit_task_result instruction */
 export const RECOMMENDED_CU_SUBMIT_TASK_RESULT = 70_000;
@@ -250,6 +256,7 @@ export const SEEDS = {
   TASK: Buffer.from("task"),
   CLAIM: Buffer.from("claim"),
   TASK_VALIDATION: Buffer.from("task_validation"),
+  TASK_JOB_SPEC: Buffer.from("task_job_spec"),
   TASK_ATTESTOR: Buffer.from("task_attestor"),
   TASK_SUBMISSION: Buffer.from("task_submission"),
   TASK_VALIDATION_VOTE: Buffer.from("task_validation_vote"),

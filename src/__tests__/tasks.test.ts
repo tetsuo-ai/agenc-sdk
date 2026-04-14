@@ -8,7 +8,7 @@
  * 4. cancelTask and other task function types are exported
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { PublicKey, Keypair } from "@solana/web3.js";
 import {
   TaskState,
@@ -18,7 +18,11 @@ import {
   deriveTaskPda,
   deriveClaimPda,
   deriveTaskValidationConfigPda,
+  deriveTaskJobSpecPda,
   deriveTaskAttestorConfigPda,
+  setTaskJobSpec,
+  claimTaskWithJobSpec,
+  getTaskJobSpec,
   deriveTaskSubmissionPda,
   deriveTaskValidationVotePda,
   deriveEscrowPda,
@@ -270,6 +274,20 @@ describe("PDA derivation", () => {
     });
   });
 
+  describe("deriveTaskJobSpecPda", () => {
+    it('uses correct seeds: ["task_job_spec", taskPda]', () => {
+      const taskPda = Keypair.generate().publicKey;
+
+      const result = deriveTaskJobSpecPda(taskPda);
+
+      const [expected] = PublicKey.findProgramAddressSync(
+        [SEEDS.TASK_JOB_SPEC, taskPda.toBuffer()],
+        PROGRAM_ID,
+      );
+      expect(result.equals(expected)).toBe(true);
+    });
+  });
+
   describe("deriveTaskAttestorConfigPda", () => {
     it('uses correct seeds: ["task_attestor", taskPda]', () => {
       const taskPda = Keypair.generate().publicKey;
@@ -337,5 +355,147 @@ describe("calculateEscrowFee", () => {
 
   it("throws for overflow escrow", () => {
     expect(() => calculateEscrowFee(Number.MAX_SAFE_INTEGER)).toThrow();
+  });
+});
+
+
+describe("task job spec helpers", () => {
+  it("sets task job spec metadata with the derived PDA", async () => {
+    const creator = Keypair.generate();
+    const taskPda = Keypair.generate().publicKey;
+    const jobSpecHash = new Uint8Array(32).fill(7);
+    const jobSpecUri = "agenc://job-spec/sha256/test";
+    const rpc = vi.fn().mockResolvedValue("set-job-spec-tx");
+    const signers = vi.fn().mockReturnValue({ rpc });
+    const preInstructions = vi.fn().mockReturnValue({ signers });
+    const accountsPartial = vi.fn().mockReturnValue({ preInstructions });
+    const setTaskJobSpecMethod = vi.fn().mockReturnValue({ accountsPartial });
+    const program = {
+      programId: PROGRAM_ID,
+      methods: { setTaskJobSpec: setTaskJobSpecMethod },
+    } as any;
+    const connection = {
+      confirmTransaction: vi.fn().mockResolvedValue({}),
+    } as any;
+
+    const result = await setTaskJobSpec(connection, program, creator, taskPda, {
+      jobSpecHash,
+      jobSpecUri,
+    });
+
+    const expectedPda = deriveTaskJobSpecPda(taskPda);
+    expect(result.txSignature).toBe("set-job-spec-tx");
+    expect(result.taskJobSpecPda.equals(expectedPda)).toBe(true);
+    expect(setTaskJobSpecMethod).toHaveBeenCalledWith(
+      Array.from(jobSpecHash),
+      jobSpecUri,
+    );
+    expect(accountsPartial).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: taskPda,
+        taskJobSpec: expectedPda,
+        creator: creator.publicKey,
+      }),
+    );
+    expect(connection.confirmTransaction).toHaveBeenCalledWith(
+      "set-job-spec-tx",
+      "confirmed",
+    );
+  });
+
+  it("claims task with the verified task job spec PDA", async () => {
+    const worker = Keypair.generate();
+    const workerAgentId = new Uint8Array(32).fill(5);
+    const taskPda = Keypair.generate().publicKey;
+    const rpc = vi.fn().mockResolvedValue("claim-with-job-spec-tx");
+    const signers = vi.fn().mockReturnValue({ rpc });
+    const preInstructions = vi.fn().mockReturnValue({ signers });
+    const accountsPartial = vi.fn().mockReturnValue({ preInstructions });
+    const claimTaskWithJobSpecMethod = vi
+      .fn()
+      .mockReturnValue({ accountsPartial });
+    const program = {
+      programId: PROGRAM_ID,
+      methods: { claimTaskWithJobSpec: claimTaskWithJobSpecMethod },
+    } as any;
+    const connection = {
+      confirmTransaction: vi.fn().mockResolvedValue({}),
+    } as any;
+
+    const result = await claimTaskWithJobSpec(
+      connection,
+      program,
+      worker,
+      workerAgentId,
+      taskPda,
+    );
+
+    const expectedTaskJobSpecPda = deriveTaskJobSpecPda(taskPda);
+    const [expectedWorkerAgentPda] = PublicKey.findProgramAddressSync(
+      [SEEDS.AGENT, workerAgentId],
+      PROGRAM_ID,
+    );
+    const expectedClaimPda = deriveClaimPda(taskPda, expectedWorkerAgentPda);
+
+    expect(result.txSignature).toBe("claim-with-job-spec-tx");
+    expect(result.taskJobSpecPda.equals(expectedTaskJobSpecPda)).toBe(true);
+    expect(claimTaskWithJobSpecMethod).toHaveBeenCalledOnce();
+    expect(accountsPartial).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: taskPda,
+        taskJobSpec: expectedTaskJobSpecPda,
+        claim: expectedClaimPda,
+        worker: expectedWorkerAgentPda,
+        authority: worker.publicKey,
+      }),
+    );
+    expect(connection.confirmTransaction).toHaveBeenCalledWith(
+      "claim-with-job-spec-tx",
+      "confirmed",
+    );
+  });
+
+  it("reads task job spec metadata and normalizes account values", async () => {
+    const taskPda = Keypair.generate().publicKey;
+    const creator = Keypair.generate().publicKey;
+    const hash = new Uint8Array(32).fill(9);
+    const fetch = vi.fn().mockResolvedValue({
+      task: taskPda,
+      creator,
+      jobSpecHash: Array.from(hash),
+      jobSpecUri: "agenc://job-spec/sha256/read",
+      createdAt: { toNumber: () => 11 },
+      updatedAt: { toNumber: () => 22 },
+      bump: 3,
+    });
+    const program = {
+      programId: PROGRAM_ID,
+      account: { taskJobSpec: { fetch } },
+    } as any;
+
+    const pointer = await getTaskJobSpec(program, taskPda);
+
+    expect(fetch).toHaveBeenCalledWith(deriveTaskJobSpecPda(taskPda));
+    expect(pointer?.task.equals(taskPda)).toBe(true);
+    expect(pointer?.creator.equals(creator)).toBe(true);
+    expect(pointer?.jobSpecHash).toEqual(hash);
+    expect(pointer?.jobSpecUri).toBe("agenc://job-spec/sha256/read");
+    expect(pointer?.createdAt).toBe(11);
+    expect(pointer?.updatedAt).toBe(22);
+    expect(pointer?.bump).toBe(3);
+  });
+
+  it("returns null when task job spec metadata account does not exist", async () => {
+    const taskPda = Keypair.generate().publicKey;
+    const program = {
+      programId: PROGRAM_ID,
+      account: {
+        taskJobSpec: {
+          fetch: vi.fn().mockRejectedValue(new Error("Account does not exist")),
+        },
+      },
+    } as any;
+
+    await expect(getTaskJobSpec(program, taskPda)).resolves.toBeNull();
   });
 });
