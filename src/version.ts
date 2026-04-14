@@ -48,7 +48,7 @@ export const SDK_PROTOCOL_VERSION = 1;
 export const SDK_MIN_PROTOCOL_VERSION = 1;
 
 /** Human-readable SDK package version. Keep in sync with package.json. */
-export const SDK_PACKAGE_VERSION = "1.3.1";
+export const SDK_PACKAGE_VERSION = "1.4.0";
 
 const FEATURE_REGISTRY: Record<number, Partial<FeatureFlags>> = {
   1: {

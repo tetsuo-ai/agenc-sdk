@@ -1,6 +1,6 @@
 {
   "package": "@tetsuo-ai/sdk",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "generatedAt": "2026-03-21T13:55:39.039Z",
   "entryPoint": "src/index.ts",
   "exports": [
