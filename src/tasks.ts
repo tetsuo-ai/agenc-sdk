@@ -954,7 +954,7 @@ export async function createTask(
   creator: Keypair,
   creatorAgentId: Uint8Array | number[],
   params: TaskParams,
-): Promise<TaskCreationResult> {
+): Promise<{ taskPda: PublicKey; txSignature: string }> {
   const jobSpecParams = validateTaskJobSpecParams(params);
   const context = buildTaskCreationContext(
     program.programId,
@@ -999,24 +999,17 @@ export async function createTask(
       .rpc(),
   );
 
-  if (!jobSpecParams) {
-    return { taskPda: context.taskPda, txSignature: tx };
+  if (jobSpecParams) {
+    await setTaskJobSpec(
+      connection,
+      program,
+      creator,
+      context.taskPda,
+      jobSpecParams,
+    );
   }
 
-  const jobSpecResult = await setTaskJobSpec(
-    connection,
-    program,
-    creator,
-    context.taskPda,
-    jobSpecParams,
-  );
-
-  return {
-    taskPda: context.taskPda,
-    txSignature: tx,
-    taskJobSpecPda: jobSpecResult.taskJobSpecPda,
-    jobSpecTxSignature: jobSpecResult.txSignature,
-  };
+  return { taskPda: context.taskPda, txSignature: tx };
 }
 
 /**
