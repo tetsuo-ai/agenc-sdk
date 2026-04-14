@@ -37,12 +37,14 @@ import {
   RECOMMENDED_CU_CREATE_TASK_TOKEN,
   RECOMMENDED_CU_CREATE_DEPENDENT_TASK,
   RECOMMENDED_CU_CLAIM_TASK,
+  RECOMMENDED_CU_CLAIM_TASK_WITH_JOB_SPEC,
   RECOMMENDED_CU_EXPIRE_CLAIM,
   RECOMMENDED_CU_COMPLETE_TASK,
   RECOMMENDED_CU_COMPLETE_TASK_TOKEN,
   RECOMMENDED_CU_COMPLETE_TASK_PRIVATE,
   RECOMMENDED_CU_COMPLETE_TASK_PRIVATE_TOKEN,
   RECOMMENDED_CU_CONFIGURE_TASK_VALIDATION,
+  RECOMMENDED_CU_SET_TASK_JOB_SPEC,
   RECOMMENDED_CU_SUBMIT_TASK_RESULT,
   RECOMMENDED_CU_ACCEPT_TASK_RESULT,
   RECOMMENDED_CU_ACCEPT_TASK_RESULT_TOKEN,
@@ -109,11 +111,50 @@ export interface TaskParams {
   rewardMint?: PublicKey | null;
   /** Creator's token account. Required when rewardMint is set. If omitted, derived as ATA. */
   creatorTokenAccount?: PublicKey;
+  /** SHA-256 hash of the canonicalized full job specification payload. */
+  jobSpecHash?: Uint8Array | number[] | null;
+  /** Fetchable URI for the canonicalized full job specification payload. */
+  jobSpecUri?: string | null;
 }
 
 export interface DependentTaskParams extends TaskParams {
   /** Dependency type enum value */
   dependencyType: number;
+}
+
+export interface TaskCreationResult {
+  /** Created task PDA */
+  taskPda: PublicKey;
+  /** Create task transaction signature */
+  txSignature: string;
+  /** Task job spec PDA when a job spec pointer was attached */
+  taskJobSpecPda?: PublicKey;
+  /** Set task job spec transaction signature when attached */
+  jobSpecTxSignature?: string;
+}
+
+export interface SetTaskJobSpecParams {
+  /** SHA-256 hash of the canonicalized full job specification payload */
+  jobSpecHash: Uint8Array | number[];
+  /** Fetchable URI for the canonicalized full job specification payload */
+  jobSpecUri: string;
+}
+
+export interface TaskJobSpecPointer {
+  /** Task PDA this pointer belongs to */
+  task: PublicKey;
+  /** Task creator that set the pointer */
+  creator: PublicKey;
+  /** SHA-256 hash of the canonicalized full job specification payload */
+  jobSpecHash: Uint8Array;
+  /** Fetchable URI for the canonicalized full job specification payload */
+  jobSpecUri: string;
+  /** Account creation timestamp */
+  createdAt: number;
+  /** Last update timestamp */
+  updatedAt: number;
+  /** PDA bump */
+  bump: number;
 }
 
 export interface TaskStatus {
@@ -353,6 +394,21 @@ export function deriveTaskValidationConfigPda(
 }
 
 /**
+ * Derive task job spec PDA from task.
+ * Seeds: ["task_job_spec", task_pda]
+ */
+export function deriveTaskJobSpecPda(
+  taskPda: PublicKey,
+  programId: PublicKey = PROGRAM_ID,
+): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [SEEDS.TASK_JOB_SPEC, taskPda.toBuffer()],
+    programId,
+  );
+  return pda;
+}
+
+/**
  * Derive task attestor config PDA from task.
  * Seeds: ["task_attestor", task_pda]
  */
@@ -489,6 +545,58 @@ function toFixedBytes(
 
 function normalizeTaskId(taskId: Uint8Array | number[]): Uint8Array {
   return taskId instanceof Uint8Array ? taskId : Uint8Array.from(taskId);
+}
+
+function normalizeJobSpecHash(jobSpecHash: Uint8Array | number[]): Uint8Array {
+  return Uint8Array.from(
+    toFixedBytes(
+      jobSpecHash instanceof Uint8Array
+        ? jobSpecHash
+        : Uint8Array.from(jobSpecHash),
+      HASH_SIZE,
+      "jobSpecHash",
+    ),
+  );
+}
+
+function hasTaskJobSpecParams(params: TaskParams): boolean {
+  return params.jobSpecHash != null || params.jobSpecUri != null;
+}
+
+function validateTaskJobSpecParams(params: TaskParams): SetTaskJobSpecParams | null {
+  if (!hasTaskJobSpecParams(params)) {
+    return null;
+  }
+
+  if (params.jobSpecHash == null || params.jobSpecUri == null) {
+    throw new Error("Both jobSpecHash and jobSpecUri are required when attaching a task job spec");
+  }
+
+  const jobSpecHash = normalizeJobSpecHash(params.jobSpecHash);
+  const jobSpecUri = params.jobSpecUri.trim();
+  if (!jobSpecUri) {
+    throw new Error("jobSpecUri cannot be empty");
+  }
+
+  return { jobSpecHash, jobSpecUri };
+}
+
+function isMissingAccountError(error: unknown): boolean {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  return (
+    errorMessage.includes("Account does not exist") ||
+    errorMessage.includes("could not find account")
+  );
+}
+
+function numberFromAnchorValue(value: unknown): number {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (value && typeof (value as { toNumber?: unknown }).toNumber === "function") {
+    return (value as { toNumber: () => number }).toNumber();
+  }
+  return 0;
 }
 
 function buildTaskTokenAccounts(
@@ -814,7 +922,7 @@ async function fetchWorkerReviewContext(
 
 async function submitTaskCreationTransaction(
   connection: Connection,
-  operation: "createTask" | "createDependentTask",
+  operation: "createTask" | "createDependentTask" | "setTaskJobSpec",
   send: () => Promise<string>,
 ): Promise<string> {
   try {
@@ -846,7 +954,8 @@ export async function createTask(
   creator: Keypair,
   creatorAgentId: Uint8Array | number[],
   params: TaskParams,
-): Promise<{ taskPda: PublicKey; txSignature: string }> {
+): Promise<TaskCreationResult> {
+  const jobSpecParams = validateTaskJobSpecParams(params);
   const context = buildTaskCreationContext(
     program.programId,
     creator,
@@ -890,7 +999,62 @@ export async function createTask(
       .rpc(),
   );
 
-  return { taskPda: context.taskPda, txSignature: tx };
+  if (!jobSpecParams) {
+    return { taskPda: context.taskPda, txSignature: tx };
+  }
+
+  const jobSpecResult = await setTaskJobSpec(
+    connection,
+    program,
+    creator,
+    context.taskPda,
+    jobSpecParams,
+  );
+
+  return {
+    taskPda: context.taskPda,
+    txSignature: tx,
+    taskJobSpecPda: jobSpecResult.taskJobSpecPda,
+    jobSpecTxSignature: jobSpecResult.txSignature,
+  };
+}
+
+/**
+ * Attach or update a content-addressed full job specification pointer for a task.
+ */
+export async function setTaskJobSpec(
+  connection: Connection,
+  program: Program,
+  creator: Keypair,
+  taskPda: PublicKey,
+  params: SetTaskJobSpecParams,
+): Promise<{ taskJobSpecPda: PublicKey; txSignature: string }> {
+  const jobSpecHash = normalizeJobSpecHash(params.jobSpecHash);
+  const jobSpecUri = params.jobSpecUri.trim();
+  if (!jobSpecUri) {
+    throw new Error("jobSpecUri cannot be empty");
+  }
+
+  const taskJobSpecPda = deriveTaskJobSpecPda(taskPda, program.programId);
+  const tx = await submitTaskCreationTransaction(connection, "setTaskJobSpec", () =>
+    program.methods
+      .setTaskJobSpec(Array.from(jobSpecHash), jobSpecUri)
+      .accountsPartial({
+        task: taskPda,
+        taskJobSpec: taskJobSpecPda,
+        creator: creator.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({
+          units: RECOMMENDED_CU_SET_TASK_JOB_SPEC,
+        }),
+      ])
+      .signers([creator])
+      .rpc(),
+  );
+
+  return { taskJobSpecPda, txSignature: tx };
 }
 
 /**
@@ -989,6 +1153,46 @@ export async function claimTask(
   await connection.confirmTransaction(tx, "confirmed");
 
   return { txSignature: tx };
+}
+
+/**
+ * Claim a task only when the on-chain task job spec pointer exists.
+ */
+export async function claimTaskWithJobSpec(
+  connection: Connection,
+  program: Program,
+  worker: Keypair,
+  workerAgentId: Uint8Array | number[],
+  taskPda: PublicKey,
+): Promise<{ txSignature: string; taskJobSpecPda: PublicKey }> {
+  const programId = program.programId;
+  const workerAgentPda = deriveAgentPda(workerAgentId, programId);
+  const claimPda = deriveClaimPda(taskPda, workerAgentPda, programId);
+  const protocolPda = deriveProtocolPda(programId);
+  const taskJobSpecPda = deriveTaskJobSpecPda(taskPda, programId);
+
+  const tx = await program.methods
+    .claimTaskWithJobSpec()
+    .accountsPartial({
+      task: taskPda,
+      taskJobSpec: taskJobSpecPda,
+      claim: claimPda,
+      protocolConfig: protocolPda,
+      worker: workerAgentPda,
+      authority: worker.publicKey,
+      systemProgram: SystemProgram.programId,
+    })
+    .preInstructions([
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: RECOMMENDED_CU_CLAIM_TASK_WITH_JOB_SPEC,
+      }),
+    ])
+    .signers([worker])
+    .rpc();
+
+  await connection.confirmTransaction(tx, "confirmed");
+
+  return { txSignature: tx, taskJobSpecPda };
 }
 
 /**
@@ -1933,9 +2137,61 @@ function parseTaskAccountData(data: TaskAccountData): TaskStatus | null {
   };
 }
 
+interface TaskJobSpecAccountData {
+  task?: PublicKey;
+  creator?: PublicKey;
+  jobSpecHash?: number[] | Uint8Array;
+  jobSpecUri?: string;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+  bump?: number;
+}
+
+function parseTaskJobSpecAccountData(
+  data: TaskJobSpecAccountData,
+): TaskJobSpecPointer | null {
+  if (
+    data.task === undefined ||
+    data.creator === undefined ||
+    data.jobSpecHash === undefined ||
+    data.jobSpecUri === undefined
+  ) {
+    return null;
+  }
+
+  return {
+    task: data.task,
+    creator: data.creator,
+    jobSpecHash: normalizeJobSpecHash(data.jobSpecHash),
+    jobSpecUri: data.jobSpecUri,
+    createdAt: numberFromAnchorValue(data.createdAt),
+    updatedAt: numberFromAnchorValue(data.updatedAt),
+    bump: data.bump ?? 0,
+  };
+}
+
 // ============================================================================
 // Query Functions
 // ============================================================================
+
+/**
+ * Get a task's content-addressed full job specification pointer by task PDA.
+ */
+export async function getTaskJobSpec(
+  program: Program,
+  taskPda: PublicKey,
+): Promise<TaskJobSpecPointer | null> {
+  try {
+    const taskJobSpecPda = deriveTaskJobSpecPda(taskPda, program.programId);
+    const account = await getAccount(program, "taskJobSpec").fetch(taskJobSpecPda);
+    return parseTaskJobSpecAccountData(account as TaskJobSpecAccountData);
+  } catch (error) {
+    if (isMissingAccountError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
 
 /**
  * Get task status by PDA.
