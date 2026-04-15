@@ -3,3 +3,6 @@ dist/
 .DS_Store
 coverage/
 *.log
+.claude/
+AGENTS.md
+CONCORDIA_TODO.MD
