@@ -19,7 +19,6 @@ import {
   deriveClaimPda,
   deriveTaskValidationConfigPda,
   deriveTaskJobSpecPda,
-  deriveTaskAttestorConfigPda,
   setTaskJobSpec,
   claimTaskWithJobSpec,
   getTaskJobSpec,
@@ -282,20 +281,6 @@ describe("PDA derivation", () => {
 
       const [expected] = PublicKey.findProgramAddressSync(
         [SEEDS.TASK_JOB_SPEC, taskPda.toBuffer()],
-        PROGRAM_ID,
-      );
-      expect(result.equals(expected)).toBe(true);
-    });
-  });
-
-  describe("deriveTaskAttestorConfigPda", () => {
-    it('uses correct seeds: ["task_attestor", taskPda]', () => {
-      const taskPda = Keypair.generate().publicKey;
-
-      const result = deriveTaskAttestorConfigPda(taskPda);
-
-      const [expected] = PublicKey.findProgramAddressSync(
-        [SEEDS.TASK_ATTESTOR, taskPda.toBuffer()],
         PROGRAM_ID,
       );
       expect(result.equals(expected)).toBe(true);

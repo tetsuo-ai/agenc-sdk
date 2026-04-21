@@ -18,11 +18,6 @@ export const PRIVACY_CASH_PROGRAM_ID = new PublicKey(
   "9fhQBbumKEFuXtMBDw8AaQyAjCorLGJQiS3skWZdQyQD",
 );
 
-/** AgenC verifier program ID — must match TRUSTED_RISC0_VERIFIER_PROGRAM_ID on-chain */
-export const VERIFIER_PROGRAM_ID = new PublicKey(
-  "3ZrAHZKjk24AKgXFekpYeG7v3Rz7NucLXTB3zxGGTjsc",
-);
-
 // ============================================================================
 // RPC Endpoints
 // ============================================================================
@@ -257,7 +252,6 @@ export const SEEDS = {
   CLAIM: Buffer.from("claim"),
   TASK_VALIDATION: Buffer.from("task_validation"),
   TASK_JOB_SPEC: Buffer.from("task_job_spec"),
-  TASK_ATTESTOR: Buffer.from("task_attestor"),
   TASK_SUBMISSION: Buffer.from("task_submission"),
   TASK_VALIDATION_VOTE: Buffer.from("task_validation_vote"),
   AUTHORITY_RATE_LIMIT: Buffer.from("authority_rate_limit"),

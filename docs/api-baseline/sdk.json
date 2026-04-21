@@ -1278,10 +1278,6 @@
       "signature": "(payload: Risc0PayloadLike): void"
     },
     {
-      "name": "VERIFIER_PROGRAM_ID",
-      "kind": "const"
-    },
-    {
       "name": "VERSION",
       "kind": "const"
     },

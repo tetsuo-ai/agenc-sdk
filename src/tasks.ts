@@ -70,6 +70,8 @@ import { imageIdsEqual, validateRisc0PayloadShape } from "./validation";
 
 export { TaskState };
 
+const TASK_ATTESTOR_SEED = Buffer.from("task_attestor");
+
 export enum TaskValidationMode {
   Auto = 0,
   CreatorReview = 1,
@@ -408,16 +410,12 @@ export function deriveTaskJobSpecPda(
   return pda;
 }
 
-/**
- * Derive task attestor config PDA from task.
- * Seeds: ["task_attestor", task_pda]
- */
-export function deriveTaskAttestorConfigPda(
+function deriveTaskAttestorConfigPda(
   taskPda: PublicKey,
   programId: PublicKey = PROGRAM_ID,
 ): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [SEEDS.TASK_ATTESTOR, taskPda.toBuffer()],
+    [TASK_ATTESTOR_SEED, taskPda.toBuffer()],
     programId,
   );
   return pda;
