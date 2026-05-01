@@ -12,6 +12,7 @@ export interface AgenCDaemonJsonObject {
 }
 
 export type AgenCDaemonMethod =
+  | "initialize"
   | "agent.create"
   | "agent.list"
   | "agent.attach"
@@ -33,12 +34,21 @@ export type AgenCDaemonMethod =
   | "auth.whoami"
   | "auth.logout";
 
+export interface InitializeParams extends AgenCDaemonJsonObject {
+  readonly protocolVersion?: string;
+  readonly clientName?: string;
+  readonly capabilities?: AgenCDaemonJsonObject;
+}
+
 export interface AgentCreateParams extends AgenCDaemonJsonObject {
+  readonly objective?: string;
   readonly cwd?: string;
   readonly model?: string;
   readonly provider?: string;
   readonly profile?: string;
   readonly instructions?: string;
+  readonly unattendedAllow?: readonly string[];
+  readonly unattendedDeny?: readonly string[];
   readonly metadata?: AgenCDaemonJsonObject;
 }
 
@@ -124,6 +134,7 @@ export interface PermissionListParams extends AgenCDaemonJsonObject {
 export type EmptyDaemonParams = Record<string, never>;
 
 export interface AgenCDaemonParamsByMethod {
+  readonly initialize: InitializeParams;
   readonly "agent.create": AgentCreateParams;
   readonly "agent.list": AgentListParams;
   readonly "agent.attach": AgentAttachParams;
@@ -151,8 +162,12 @@ export type SessionStatus = "idle" | "running" | "waiting" | "closed" | "error";
 
 export interface AgentSummary extends AgenCDaemonJsonObject {
   readonly agentId: string;
+  readonly agentPath?: string;
+  readonly objective?: string;
   readonly status: AgentStatus;
   readonly createdAt: string;
+  readonly startedAt?: string;
+  readonly lastActiveAt?: string;
   readonly cwd?: string;
   readonly activeSessionIds?: readonly string[];
   readonly metadata?: AgenCDaemonJsonObject;
@@ -187,6 +202,12 @@ export interface AgentAttachResult extends AgenCDaemonJsonObject {
 export interface AgentStopResult extends AgenCDaemonJsonObject {
   readonly agentId: string;
   readonly stopped: boolean;
+}
+
+export interface InitializeResult extends AgenCDaemonJsonObject {
+  readonly type: "initialized";
+  readonly protocolVersion: string;
+  readonly capabilities: AgenCDaemonJsonObject;
 }
 
 export interface SessionCreateResult extends SessionSummary {}
@@ -302,6 +323,7 @@ export interface AuthLogoutResult extends AgenCDaemonJsonObject {
 }
 
 export interface AgenCDaemonResultByMethod {
+  readonly initialize: InitializeResult;
   readonly "agent.create": AgentCreateResult;
   readonly "agent.list": AgentListResult;
   readonly "agent.attach": AgentAttachResult;
@@ -430,6 +452,10 @@ export class AgenCDaemonClient {
 
   createAgent(params: AgentCreateParams = {}): Promise<AgentCreateResult> {
     return this.request("agent.create", params);
+  }
+
+  initialize(params: InitializeParams = {}): Promise<InitializeResult> {
+    return this.request("initialize", params);
   }
 
   listAgents(params: AgentListParams = {}): Promise<AgentListResult> {
