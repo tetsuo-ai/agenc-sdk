@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Keypair, PublicKey } from "@solana/web3.js";
-import { deriveDisputePda, deriveVotePda } from "../disputes";
+import { cancelDispute, deriveDisputePda, deriveVotePda } from "../disputes";
 import { PROGRAM_ID, SEEDS } from "../constants";
+import { deriveProtocolPda } from "../protocol";
 
 describe("disputes PDA helpers", () => {
   it('deriveDisputePda uses ["dispute", disputeId] seeds', () => {
@@ -27,5 +28,45 @@ describe("disputes PDA helpers", () => {
     );
 
     expect(pda.equals(expected)).toBe(true);
+  });
+
+  it("cancelDispute passes protocolConfig for launch-control gates", async () => {
+    const authority = Keypair.generate();
+    const disputePda = Keypair.generate().publicKey;
+    const taskPda = Keypair.generate().publicKey;
+    const rpc = vi.fn().mockResolvedValue("cancel-dispute-tx");
+    const signers = vi.fn().mockReturnValue({ rpc });
+    const remainingAccounts = vi.fn().mockReturnValue({ rpc });
+    const accountsPartial = vi.fn().mockReturnValue({ signers, remainingAccounts });
+    const cancelDisputeMethod = vi.fn().mockReturnValue({ accountsPartial });
+    const program = {
+      programId: PROGRAM_ID,
+      methods: { cancelDispute: cancelDisputeMethod },
+    } as any;
+    const connection = {
+      confirmTransaction: vi.fn().mockResolvedValue({}),
+    } as any;
+
+    const result = await cancelDispute(
+      connection,
+      program,
+      authority,
+      disputePda,
+      taskPda,
+    );
+
+    expect(result.txSignature).toBe("cancel-dispute-tx");
+    expect(accountsPartial).toHaveBeenCalledWith(
+      expect.objectContaining({
+        protocolConfig: deriveProtocolPda(PROGRAM_ID),
+        dispute: disputePda,
+        task: taskPda,
+        authority: authority.publicKey,
+      }),
+    );
+    expect(connection.confirmTransaction).toHaveBeenCalledWith(
+      "cancel-dispute-tx",
+      "confirmed",
+    );
   });
 });

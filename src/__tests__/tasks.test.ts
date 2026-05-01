@@ -29,6 +29,7 @@ import {
   calculateEscrowFee,
 } from "../tasks";
 import { PROGRAM_ID, SEEDS } from "../constants";
+import { deriveProtocolPda } from "../protocol";
 
 describe("TaskState enum", () => {
   describe("enum values match on-chain TaskStatus", () => {
@@ -369,6 +370,7 @@ describe("task job spec helpers", () => {
     });
 
     const expectedPda = deriveTaskJobSpecPda(taskPda);
+    const expectedProtocolPda = deriveProtocolPda(PROGRAM_ID);
     expect(result.txSignature).toBe("set-job-spec-tx");
     expect(result.taskJobSpecPda.equals(expectedPda)).toBe(true);
     expect(setTaskJobSpecMethod).toHaveBeenCalledWith(
@@ -377,6 +379,7 @@ describe("task job spec helpers", () => {
     );
     expect(accountsPartial).toHaveBeenCalledWith(
       expect.objectContaining({
+        protocolConfig: expectedProtocolPda,
         task: taskPda,
         taskJobSpec: expectedPda,
         creator: creator.publicKey,

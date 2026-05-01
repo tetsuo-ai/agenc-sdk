@@ -565,9 +565,11 @@ export async function cancelDispute(
   taskPda: PublicKey,
   defendantAgentPda?: PublicKey,
 ): Promise<{ txSignature: string }> {
+  const protocolPda = deriveProtocolPda(program.programId);
   const builder = program.methods
     .cancelDispute()
     .accountsPartial({
+      protocolConfig: protocolPda,
       dispute: disputePda,
       task: taskPda,
       authority: authority.publicKey,

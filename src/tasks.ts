@@ -1027,10 +1027,12 @@ export async function setTaskJobSpec(
   }
 
   const taskJobSpecPda = deriveTaskJobSpecPda(taskPda, program.programId);
+  const protocolPda = deriveProtocolPda(program.programId);
   const tx = await submitTaskCreationTransaction(connection, "setTaskJobSpec", () =>
     program.methods
       .setTaskJobSpec(Array.from(jobSpecHash), jobSpecUri)
       .accountsPartial({
+        protocolConfig: protocolPda,
         task: taskPda,
         taskJobSpec: taskJobSpecPda,
         creator: creator.publicKey,
