@@ -37,6 +37,7 @@ export type AgenCDaemonMethod =
 export interface InitializeParams extends AgenCDaemonJsonObject {
   readonly protocolVersion?: string;
   readonly clientName?: string;
+  readonly authCookie?: string;
   readonly capabilities?: AgenCDaemonJsonObject;
 }
 
