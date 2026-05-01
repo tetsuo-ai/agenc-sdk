@@ -15,7 +15,9 @@ The example:
 The standalone `npm run start` path uses the current JSON-line daemon protocol
 fallback for the TUI side. In the runtime contract test, the same flow is wired
 to the actual TUI daemon bridge so the SDK and TUI attachments share daemon
-session state and event fan-out.
+session state and event fan-out. That runtime contract is the authoritative
+bridge integration until the SDK exposes the daemon initialize and subscription
+transport surfaces directly.
 
 The temporary JSON-line transport is intentionally local to the example. Replace
 it with the SDK daemon transport once the initialize/version handshake and
