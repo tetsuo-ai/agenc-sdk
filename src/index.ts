@@ -7,6 +7,8 @@
  * - Private payload shape is seal/journal/image/binding/nullifier seeds
  */
 
+export * from "./daemon";
+
 export {
   generateProof,
   computeHashes,
