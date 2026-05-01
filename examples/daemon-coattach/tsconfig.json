@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node", "vitest"],
+    "baseUrl": ".",
+    "paths": {
+      "@tetsuo-ai/sdk": ["../../src/index.ts"]
+    }
+  },
+  "include": ["index.ts", "index.test.ts"]
+}
