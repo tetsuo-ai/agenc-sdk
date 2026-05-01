@@ -33,6 +33,9 @@ interface UnixSocketTransportOptions {
 }
 
 export interface DaemonCoAttachOptions {
+  readonly attachTui?: (
+    options: DaemonTuiAttachOptions,
+  ) => Promise<DaemonTuiAttachment>;
   readonly client?: Pick<
     AgenCDaemonClient,
     | "attachSession"
@@ -50,10 +53,21 @@ export interface DaemonCoAttachOptions {
   readonly tuiPrompt?: string;
 }
 
+export interface DaemonTuiAttachOptions {
+  readonly client: Pick<AgenCDaemonClient, "attachSession" | "streamMessage">;
+  readonly clientId: string;
+  readonly sessionId: string;
+}
+
+export interface DaemonTuiAttachment {
+  readonly attachmentId: string;
+  submit(message: string): Promise<MessageStreamResult>;
+}
+
 export interface DaemonCoAttachResult {
   readonly session: SessionCreateResult;
   readonly sdkAttachment: SessionAttachResult;
-  readonly tuiAttachment: SessionAttachResult;
+  readonly tuiAttachment: DaemonTuiAttachment;
   readonly sdkMessage: MessageSendResult;
   readonly tuiMessage: MessageStreamResult;
   readonly visibleSession: SessionSummary;
@@ -145,7 +159,9 @@ export async function runDaemonCoAttach(
     sessionId: session.sessionId,
     clientId: sdkClientId,
   });
-  const tuiAttachment = await client.attachSession({
+  const attachTui = options.attachTui ?? attachProtocolTuiSide;
+  const tuiAttachment = await attachTui({
+    client,
     sessionId: session.sessionId,
     clientId: tuiClientId,
   });
@@ -154,12 +170,7 @@ export async function runDaemonCoAttach(
     content: sdkPrompt,
     metadata: { source: sdkClientId },
   });
-  const tuiMessage = await client.streamMessage({
-    sessionId: session.sessionId,
-    content: tuiPrompt,
-    streamId: `${tuiClientId}:hello-world`,
-    metadata: { source: tuiClientId },
-  });
+  const tuiMessage = await tuiAttachment.submit(tuiPrompt);
   const listed = await client.listSessions({ agentId: session.agentId });
   const visibleSession = listed.sessions.find(
     (candidate) => candidate.sessionId === session.sessionId,
@@ -178,6 +189,25 @@ export async function runDaemonCoAttach(
     sdkMessage,
     tuiMessage,
     visibleSession,
+  };
+}
+
+async function attachProtocolTuiSide(
+  options: DaemonTuiAttachOptions,
+): Promise<DaemonTuiAttachment> {
+  const attachment = await options.client.attachSession({
+    sessionId: options.sessionId,
+    clientId: options.clientId,
+  });
+  return {
+    attachmentId: attachment.attachmentId,
+    submit: (message) =>
+      options.client.streamMessage({
+        sessionId: options.sessionId,
+        content: message,
+        streamId: `${options.clientId}:hello-world`,
+        metadata: { source: options.clientId },
+      }),
   };
 }
 
