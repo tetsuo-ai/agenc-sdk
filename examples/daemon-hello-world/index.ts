@@ -6,12 +6,16 @@
 import { createConnection } from "node:net";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createAgenCDaemonClient,
+  type AgenCDaemonClient,
   type AgenCDaemonMethod,
   type AgenCDaemonRequest,
   type AgenCDaemonResponse,
   type AgenCDaemonTransport,
+  type MessageSendResult,
+  type SessionCreateResult,
 } from "@tetsuo-ai/sdk";
 
 const DEFAULT_PROMPT = "Say hello from the AgenC SDK.";
@@ -20,6 +24,19 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 interface UnixSocketTransportOptions {
   readonly socketPath?: string;
   readonly timeoutMs?: number;
+}
+
+export interface DaemonHelloWorldOptions {
+  readonly client?: Pick<AgenCDaemonClient, "createSession" | "sendMessage">;
+  readonly cwd?: string;
+  readonly prompt?: string;
+  readonly socketPath?: string;
+  readonly timeoutMs?: number;
+}
+
+export interface DaemonHelloWorldResult {
+  readonly session: SessionCreateResult;
+  readonly response: MessageSendResult;
 }
 
 class UnixSocketJsonLineTransport implements AgenCDaemonTransport {
@@ -82,16 +99,21 @@ class UnixSocketJsonLineTransport implements AgenCDaemonTransport {
   }
 }
 
-async function main(): Promise<void> {
-  const prompt = process.argv.slice(2).join(" ").trim() || DEFAULT_PROMPT;
-  const client = createAgenCDaemonClient({
-    transport: new UnixSocketJsonLineTransport({
-      socketPath: process.env.AGENC_DAEMON_SOCKET,
-    }),
-  });
+export async function runDaemonHelloWorld(
+  options: DaemonHelloWorldOptions = {},
+): Promise<DaemonHelloWorldResult> {
+  const prompt = options.prompt?.trim() || DEFAULT_PROMPT;
+  const client =
+    options.client ??
+    createAgenCDaemonClient({
+      transport: new UnixSocketJsonLineTransport({
+        socketPath: options.socketPath,
+        timeoutMs: options.timeoutMs,
+      }),
+    });
 
   const session = await client.createSession({
-    cwd: process.cwd(),
+    cwd: options.cwd ?? process.cwd(),
     initialPrompt: prompt,
     metadata: { source: "sdk-daemon-hello-world" },
   });
@@ -99,6 +121,16 @@ async function main(): Promise<void> {
     sessionId: session.sessionId,
     content: prompt,
     metadata: { source: "sdk-daemon-hello-world" },
+  });
+
+  return { session, response };
+}
+
+async function main(): Promise<void> {
+  const prompt = process.argv.slice(2).join(" ").trim() || DEFAULT_PROMPT;
+  const { session, response } = await runDaemonHelloWorld({
+    prompt,
+    socketPath: process.env.AGENC_DAEMON_SOCKET,
   });
 
   console.log(
@@ -114,6 +146,10 @@ async function main(): Promise<void> {
   );
 }
 
+function isMainModule(): boolean {
+  return process.argv[1] === fileURLToPath(import.meta.url);
+}
+
 function defaultAgenCDaemonSocketPath(): string {
   return join(homedir(), ".agenc", "daemon.sock");
 }
@@ -122,7 +158,9 @@ function asError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
-main().catch((error: unknown) => {
-  console.error(asError(error).message);
-  process.exitCode = 1;
-});
+if (isMainModule()) {
+  main().catch((error: unknown) => {
+    console.error(asError(error).message);
+    process.exitCode = 1;
+  });
+}
