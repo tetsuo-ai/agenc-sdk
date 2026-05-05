@@ -5,6 +5,7 @@ import {
   AgenCDaemonMalformedResponseError,
   AgenCDaemonRpcError,
   createAgenCDaemonClient,
+  type AgenCDaemonNotification,
   type AgenCDaemonRequest,
   type AgenCDaemonResponse,
   type AgenCDaemonTransport,
@@ -72,6 +73,86 @@ describe("AgenCDaemonClient", () => {
       method: "agent.list",
       params: {},
     });
+  });
+
+  it("frames agent log and elicitation response requests", async () => {
+    const transport = createTransport((request) => {
+      if (request.method === "agent.logs") {
+        return {
+          jsonrpc: AGENC_DAEMON_JSON_RPC_VERSION,
+          id: request.id,
+          result: {
+            agentId: "agent_1",
+            transcript: "hello",
+            sessions: [],
+          },
+        };
+      }
+      return {
+        jsonrpc: AGENC_DAEMON_JSON_RPC_VERSION,
+        id: request.id,
+        result: {
+          requestId: "elicitation_1",
+          resolved: true,
+        },
+      };
+    });
+    const client = new AgenCDaemonClient({
+      transport,
+      createRequestId: vi
+        .fn()
+        .mockReturnValueOnce("logs_1")
+        .mockReturnValueOnce("elicitation_1"),
+    });
+
+    await expect(client.getAgentLogs({ agentId: "agent_1" })).resolves.toEqual({
+      agentId: "agent_1",
+      transcript: "hello",
+      sessions: [],
+    });
+    await expect(
+      client.respondToElicitation({
+        sessionId: "session_1",
+        requestId: "elicitation_1",
+        kind: "request_user_input",
+        response: { answer: "yes" },
+      }),
+    ).resolves.toEqual({
+      requestId: "elicitation_1",
+      resolved: true,
+    });
+
+    expect(transport.request).toHaveBeenNthCalledWith(1, {
+      jsonrpc: AGENC_DAEMON_JSON_RPC_VERSION,
+      id: "logs_1",
+      method: "agent.logs",
+      params: { agentId: "agent_1" },
+    });
+    expect(transport.request).toHaveBeenNthCalledWith(2, {
+      jsonrpc: AGENC_DAEMON_JSON_RPC_VERSION,
+      id: "elicitation_1",
+      method: "elicitation.respond",
+      params: {
+        sessionId: "session_1",
+        requestId: "elicitation_1",
+        kind: "request_user_input",
+        response: { answer: "yes" },
+      },
+    });
+  });
+
+  it("types daemon session event notifications", () => {
+    const notification = {
+      jsonrpc: AGENC_DAEMON_JSON_RPC_VERSION,
+      method: "event.message_chunk",
+      params: {
+        sessionId: "session_1",
+        eventId: "event_1",
+        delta: "hello",
+      },
+    } satisfies AgenCDaemonNotification<"event.message_chunk">;
+
+    expect(notification.method).toBe("event.message_chunk");
   });
 
   it("omits params for optional health/auth methods", async () => {

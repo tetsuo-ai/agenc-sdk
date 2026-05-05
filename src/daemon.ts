@@ -13,10 +13,12 @@ export interface AgenCDaemonJsonObject {
 
 export type AgenCDaemonMethod =
   | "initialize"
+  | "request.cancel"
   | "agent.create"
   | "agent.list"
   | "agent.attach"
   | "agent.stop"
+  | "agent.logs"
   | "session.create"
   | "session.list"
   | "session.attach"
@@ -26,7 +28,14 @@ export type AgenCDaemonMethod =
   | "message.stream"
   | "tool.approve"
   | "tool.deny"
+  | "tool.cancel"
+  | "elicitation.respond"
   | "permission.list"
+  | "fs.fuzzy_search"
+  | "commandExec.start"
+  | "commandExec.write"
+  | "commandExec.resize"
+  | "commandExec.terminate"
   | "health.ping"
   | "health.ready"
   | "health.stats"
@@ -34,11 +43,26 @@ export type AgenCDaemonMethod =
   | "auth.whoami"
   | "auth.logout";
 
+export type AgenCDaemonNotificationMethod =
+  | "commandExec.outputDelta"
+  | "event.message_chunk"
+  | "event.tool_request"
+  | "event.permission_request"
+  | "event.user_input_request"
+  | "event.mcp_elicitation_request"
+  | "event.agent_status"
+  | "event.session_event";
+
 export interface InitializeParams extends AgenCDaemonJsonObject {
   readonly protocolVersion?: string;
   readonly clientName?: string;
   readonly authCookie?: string;
   readonly capabilities?: AgenCDaemonJsonObject;
+}
+
+export interface RequestCancelParams extends AgenCDaemonJsonObject {
+  readonly requestId: AgenCDaemonRequestId;
+  readonly reason?: string;
 }
 
 export interface AgentCreateParams extends AgenCDaemonJsonObject {
@@ -66,6 +90,10 @@ export interface AgentAttachParams extends AgenCDaemonJsonObject {
 export interface AgentStopParams extends AgenCDaemonJsonObject {
   readonly agentId: string;
   readonly reason?: string;
+}
+
+export interface AgentLogsParams extends AgenCDaemonJsonObject {
+  readonly agentId: string;
 }
 
 export interface SessionCreateParams extends AgenCDaemonJsonObject {
@@ -127,19 +155,80 @@ export interface ToolDenyParams extends AgenCDaemonJsonObject {
   readonly reason?: string;
 }
 
+export interface ToolCancelParams extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly requestId: string;
+  readonly reason?: string;
+}
+
+export interface ElicitationRespondParams extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly requestId: AgenCDaemonRequestId;
+  readonly kind: "request_user_input" | "mcp";
+  readonly serverName?: string;
+  readonly response: AgenCDaemonJsonObject;
+}
+
 export interface PermissionListParams extends AgenCDaemonJsonObject {
   readonly agentId?: string;
   readonly sessionId?: string;
+}
+
+export interface FuzzyFileSearchParams extends AgenCDaemonJsonObject {
+  readonly query: string;
+  readonly roots: readonly string[];
+  readonly cancellationToken?: string | null;
+}
+
+export interface CommandExecTerminalSize extends AgenCDaemonJsonObject {
+  readonly rows: number;
+  readonly cols: number;
+}
+
+export type CommandExecEnv = Readonly<Record<string, string | null>>;
+
+export interface CommandExecStartParams extends AgenCDaemonJsonObject {
+  readonly command: readonly string[];
+  readonly processId?: string | null;
+  readonly tty?: boolean;
+  readonly streamStdin?: boolean;
+  readonly streamStdoutStderr?: boolean;
+  readonly outputBytesCap?: number | null;
+  readonly disableOutputCap?: boolean;
+  readonly disableTimeout?: boolean;
+  readonly timeoutMs?: number | null;
+  readonly cwd?: string | null;
+  readonly env?: CommandExecEnv | null;
+  readonly size?: CommandExecTerminalSize | null;
+  readonly sandboxPolicy?: AgenCDaemonJsonObject | null;
+  readonly permissionProfile?: AgenCDaemonJsonObject | null;
+}
+
+export interface CommandExecWriteParams extends AgenCDaemonJsonObject {
+  readonly processId: string;
+  readonly deltaBase64?: string | null;
+  readonly closeStdin?: boolean;
+}
+
+export interface CommandExecTerminateParams extends AgenCDaemonJsonObject {
+  readonly processId: string;
+}
+
+export interface CommandExecResizeParams extends AgenCDaemonJsonObject {
+  readonly processId: string;
+  readonly size: CommandExecTerminalSize;
 }
 
 export type EmptyDaemonParams = Record<string, never>;
 
 export interface AgenCDaemonParamsByMethod {
   readonly initialize: InitializeParams;
+  readonly "request.cancel": RequestCancelParams;
   readonly "agent.create": AgentCreateParams;
   readonly "agent.list": AgentListParams;
   readonly "agent.attach": AgentAttachParams;
   readonly "agent.stop": AgentStopParams;
+  readonly "agent.logs": AgentLogsParams;
   readonly "session.create": SessionCreateParams;
   readonly "session.list": SessionListParams;
   readonly "session.attach": SessionAttachParams;
@@ -149,7 +238,14 @@ export interface AgenCDaemonParamsByMethod {
   readonly "message.stream": MessageStreamParams;
   readonly "tool.approve": ToolApproveParams;
   readonly "tool.deny": ToolDenyParams;
+  readonly "tool.cancel": ToolCancelParams;
+  readonly "elicitation.respond": ElicitationRespondParams;
   readonly "permission.list": PermissionListParams;
+  readonly "fs.fuzzy_search": FuzzyFileSearchParams;
+  readonly "commandExec.start": CommandExecStartParams;
+  readonly "commandExec.write": CommandExecWriteParams;
+  readonly "commandExec.resize": CommandExecResizeParams;
+  readonly "commandExec.terminate": CommandExecTerminateParams;
   readonly "health.ping": EmptyDaemonParams;
   readonly "health.ready": EmptyDaemonParams;
   readonly "health.stats": EmptyDaemonParams;
@@ -159,6 +255,16 @@ export interface AgenCDaemonParamsByMethod {
 }
 
 export type AgentStatus = "idle" | "running" | "stopping" | "stopped" | "error";
+export type AgentRunStatus =
+  | "pending"
+  | "running"
+  | "working"
+  | "paused"
+  | "blocked"
+  | "suspended"
+  | "completed"
+  | "errored"
+  | "stopped";
 export type SessionStatus = "idle" | "running" | "waiting" | "closed" | "error";
 
 export interface AgentSummary extends AgenCDaemonJsonObject {
@@ -205,10 +311,42 @@ export interface AgentStopResult extends AgenCDaemonJsonObject {
   readonly stopped: boolean;
 }
 
+export interface AgentLogSession extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly itemCount: number;
+  readonly transcript: string;
+  readonly rolloutPath?: string;
+  readonly source?: string;
+}
+
+export interface AgentToolOutputLog extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly toolCallId: string;
+  readonly toolName: string;
+  readonly status: string;
+  readonly output: string;
+  readonly outputBytes: number;
+  readonly outputLogPath?: string;
+  readonly outputLogBytes?: number;
+}
+
+export interface AgentLogsResult extends AgenCDaemonJsonObject {
+  readonly agentId: string;
+  readonly transcript: string;
+  readonly sessions: readonly AgentLogSession[];
+  readonly toolOutputs?: readonly AgentToolOutputLog[];
+}
+
 export interface InitializeResult extends AgenCDaemonJsonObject {
   readonly type: "initialized";
   readonly protocolVersion: string;
   readonly capabilities: AgenCDaemonJsonObject;
+}
+
+export interface RequestCancelResult extends AgenCDaemonJsonObject {
+  readonly requestId: AgenCDaemonRequestId;
+  readonly cancelled: boolean;
+  readonly reason?: string;
 }
 
 export interface SessionCreateResult extends SessionSummary {}
@@ -252,7 +390,12 @@ export interface MessageStreamResult extends MessageSendResult {
 
 export interface ToolDecisionResult extends AgenCDaemonJsonObject {
   readonly requestId: string;
-  readonly decision: "approved" | "denied";
+  readonly decision: "approved" | "denied" | "cancelled";
+}
+
+export interface ElicitationRespondResult extends AgenCDaemonJsonObject {
+  readonly requestId: AgenCDaemonRequestId;
+  readonly resolved: boolean;
 }
 
 export interface PermissionGrant extends AgenCDaemonJsonObject {
@@ -266,6 +409,118 @@ export interface PermissionGrant extends AgenCDaemonJsonObject {
 
 export interface PermissionListResult extends AgenCDaemonJsonObject {
   readonly permissions: readonly PermissionGrant[];
+}
+
+export interface FuzzyFileSearchResult extends AgenCDaemonJsonObject {
+  readonly root: string;
+  readonly path: string;
+  readonly match_type: "file" | "directory";
+  readonly file_name: string;
+  readonly score: number;
+  readonly indices?: readonly number[];
+}
+
+export interface FuzzyFileSearchResponse extends AgenCDaemonJsonObject {
+  readonly files: readonly FuzzyFileSearchResult[];
+}
+
+export interface CommandExecResponse extends AgenCDaemonJsonObject {
+  readonly exitCode: number;
+  readonly stdout: string;
+  readonly stderr: string;
+}
+
+export interface CommandExecWriteResponse extends AgenCDaemonJsonObject {}
+
+export interface CommandExecTerminateResponse extends AgenCDaemonJsonObject {}
+
+export interface CommandExecResizeResponse extends AgenCDaemonJsonObject {}
+
+export type CommandExecOutputStream = "stdout" | "stderr";
+
+export interface CommandExecOutputDeltaParams extends AgenCDaemonJsonObject {
+  readonly processId: string;
+  readonly stream: CommandExecOutputStream;
+  readonly deltaBase64: string;
+  readonly capReached: boolean;
+}
+
+export interface AgenCEventBaseParams extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly eventId: string;
+  readonly agentId?: string;
+  readonly sequence?: number;
+  readonly acceptedAt?: string;
+  readonly metadata?: AgenCDaemonJsonObject;
+}
+
+export interface EventMessageChunkParams extends AgenCEventBaseParams {
+  readonly messageId?: string;
+  readonly streamId?: string;
+  readonly delta: string;
+}
+
+export interface EventToolRequestParams extends AgenCEventBaseParams {
+  readonly requestId: string;
+  readonly toolName: string;
+  readonly turnId?: string;
+  readonly input?: AgenCDaemonJsonValue;
+  readonly recoveryCategory?: "idempotent" | "side-effecting" | "interactive";
+}
+
+export interface EventPermissionRequestParams extends AgenCEventBaseParams {
+  readonly requestId: string;
+  readonly toolName?: string;
+  readonly turnId?: string;
+  readonly permissions: readonly string[];
+  readonly input?: AgenCDaemonJsonValue;
+  readonly reason?: string;
+}
+
+export interface EventUserInputRequestParams extends AgenCEventBaseParams {
+  readonly requestId: string;
+  readonly callId: string;
+  readonly turnId: string;
+  readonly questions: readonly AgenCDaemonJsonObject[];
+}
+
+export interface EventMcpElicitationRequestParams
+  extends AgenCEventBaseParams {
+  readonly requestId: AgenCDaemonRequestId;
+  readonly serverName: string;
+  readonly turnId: string;
+  readonly request: AgenCDaemonJsonObject;
+}
+
+export interface EventAgentStatusParams extends AgenCEventBaseParams {
+  readonly agentId: string;
+  readonly status: AgentStatus;
+  readonly runStatus?: AgentRunStatus;
+  readonly turnId?: string;
+  readonly message?: string;
+}
+
+export interface EventSessionEventParams extends AgenCEventBaseParams {
+  readonly event: AgenCDaemonJsonObject;
+}
+
+export interface AgenCDaemonNotificationParamsByMethod {
+  readonly "commandExec.outputDelta": CommandExecOutputDeltaParams;
+  readonly "event.message_chunk": EventMessageChunkParams;
+  readonly "event.tool_request": EventToolRequestParams;
+  readonly "event.permission_request": EventPermissionRequestParams;
+  readonly "event.user_input_request": EventUserInputRequestParams;
+  readonly "event.mcp_elicitation_request": EventMcpElicitationRequestParams;
+  readonly "event.agent_status": EventAgentStatusParams;
+  readonly "event.session_event": EventSessionEventParams;
+}
+
+export interface AgenCDaemonNotification<
+  Method extends AgenCDaemonNotificationMethod = AgenCDaemonNotificationMethod,
+> {
+  readonly jsonrpc: typeof AGENC_DAEMON_JSON_RPC_VERSION;
+  readonly method: Method;
+  readonly params: AgenCDaemonNotificationParamsByMethod[Method];
 }
 
 export interface HealthPingResult extends AgenCDaemonJsonObject {
@@ -325,10 +580,12 @@ export interface AuthLogoutResult extends AgenCDaemonJsonObject {
 
 export interface AgenCDaemonResultByMethod {
   readonly initialize: InitializeResult;
+  readonly "request.cancel": RequestCancelResult;
   readonly "agent.create": AgentCreateResult;
   readonly "agent.list": AgentListResult;
   readonly "agent.attach": AgentAttachResult;
   readonly "agent.stop": AgentStopResult;
+  readonly "agent.logs": AgentLogsResult;
   readonly "session.create": SessionCreateResult;
   readonly "session.list": SessionListResult;
   readonly "session.attach": SessionAttachResult;
@@ -338,7 +595,14 @@ export interface AgenCDaemonResultByMethod {
   readonly "message.stream": MessageStreamResult;
   readonly "tool.approve": ToolDecisionResult;
   readonly "tool.deny": ToolDecisionResult;
+  readonly "tool.cancel": ToolDecisionResult;
+  readonly "elicitation.respond": ElicitationRespondResult;
   readonly "permission.list": PermissionListResult;
+  readonly "fs.fuzzy_search": FuzzyFileSearchResponse;
+  readonly "commandExec.start": CommandExecResponse;
+  readonly "commandExec.write": CommandExecWriteResponse;
+  readonly "commandExec.resize": CommandExecResizeResponse;
+  readonly "commandExec.terminate": CommandExecTerminateResponse;
   readonly "health.ping": HealthPingResult;
   readonly "health.ready": HealthReadyResult;
   readonly "health.stats": HealthStatsResult;
@@ -459,6 +723,10 @@ export class AgenCDaemonClient {
     return this.request("initialize", params);
   }
 
+  cancelRequest(params: RequestCancelParams): Promise<RequestCancelResult> {
+    return this.request("request.cancel", params);
+  }
+
   listAgents(params: AgentListParams = {}): Promise<AgentListResult> {
     return this.request("agent.list", params);
   }
@@ -469,6 +737,10 @@ export class AgenCDaemonClient {
 
   stopAgent(params: AgentStopParams): Promise<AgentStopResult> {
     return this.request("agent.stop", params);
+  }
+
+  getAgentLogs(params: AgentLogsParams): Promise<AgentLogsResult> {
+    return this.request("agent.logs", params);
   }
 
   createSession(
@@ -511,10 +783,46 @@ export class AgenCDaemonClient {
     return this.request("tool.deny", params);
   }
 
+  cancelTool(params: ToolCancelParams): Promise<ToolDecisionResult> {
+    return this.request("tool.cancel", params);
+  }
+
+  respondToElicitation(
+    params: ElicitationRespondParams,
+  ): Promise<ElicitationRespondResult> {
+    return this.request("elicitation.respond", params);
+  }
+
   listPermissions(
     params: PermissionListParams = {},
   ): Promise<PermissionListResult> {
     return this.request("permission.list", params);
+  }
+
+  fuzzySearch(params: FuzzyFileSearchParams): Promise<FuzzyFileSearchResponse> {
+    return this.request("fs.fuzzy_search", params);
+  }
+
+  startCommandExec(params: CommandExecStartParams): Promise<CommandExecResponse> {
+    return this.request("commandExec.start", params);
+  }
+
+  writeCommandExec(
+    params: CommandExecWriteParams,
+  ): Promise<CommandExecWriteResponse> {
+    return this.request("commandExec.write", params);
+  }
+
+  resizeCommandExec(
+    params: CommandExecResizeParams,
+  ): Promise<CommandExecResizeResponse> {
+    return this.request("commandExec.resize", params);
+  }
+
+  terminateCommandExec(
+    params: CommandExecTerminateParams,
+  ): Promise<CommandExecTerminateResponse> {
+    return this.request("commandExec.terminate", params);
   }
 
   ping(): Promise<HealthPingResult> {
