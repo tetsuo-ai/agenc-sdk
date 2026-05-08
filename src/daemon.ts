@@ -24,6 +24,7 @@ export type AgenCDaemonMethod =
   | "session.attach"
   | "session.detach"
   | "session.terminate"
+  | "session.cancelTurn"
   | "message.send"
   | "message.stream"
   | "thread/realtime/start"
@@ -134,6 +135,11 @@ export interface SessionDetachParams extends AgenCDaemonJsonObject {
 }
 
 export interface SessionTerminateParams extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly reason?: string;
+}
+
+export interface SessionCancelTurnParams extends AgenCDaemonJsonObject {
   readonly sessionId: string;
   readonly reason?: string;
 }
@@ -322,6 +328,7 @@ export interface AgenCDaemonParamsByMethod {
   readonly "session.attach": SessionAttachParams;
   readonly "session.detach": SessionDetachParams;
   readonly "session.terminate": SessionTerminateParams;
+  readonly "session.cancelTurn": SessionCancelTurnParams;
   readonly "message.send": MessageSendParams;
   readonly "message.stream": MessageStreamParams;
   readonly "thread/realtime/start": ThreadRealtimeStartParams;
@@ -469,6 +476,12 @@ export interface SessionTerminateResult extends AgenCDaemonJsonObject {
   readonly terminated: boolean;
   readonly status: "closed";
   readonly closedAt: string;
+  readonly reason?: string;
+}
+
+export interface SessionCancelTurnResult extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly cancelled: boolean;
   readonly reason?: string;
 }
 
@@ -742,6 +755,7 @@ export interface AgenCDaemonResultByMethod {
   readonly "session.attach": SessionAttachResult;
   readonly "session.detach": SessionDetachResult;
   readonly "session.terminate": SessionTerminateResult;
+  readonly "session.cancelTurn": SessionCancelTurnResult;
   readonly "message.send": MessageSendResult;
   readonly "message.stream": MessageStreamResult;
   readonly "thread/realtime/start": ThreadRealtimeStartResponse;
