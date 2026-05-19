@@ -24,7 +24,10 @@ export type AgenCDaemonMethod =
   | "session.attach"
   | "session.detach"
   | "session.terminate"
+  | "session.clear"
+  | "session.snapshot"
   | "session.cancelTurn"
+  | "session.mcp.addServer"
   | "message.send"
   | "message.stream"
   | "thread/realtime/start"
@@ -45,6 +48,7 @@ export type AgenCDaemonMethod =
   | "health.ping"
   | "health.ready"
   | "health.stats"
+  | "daemon.reload"
   | "auth.login"
   | "auth.whoami"
   | "auth.logout";
@@ -139,9 +143,32 @@ export interface SessionTerminateParams extends AgenCDaemonJsonObject {
   readonly reason?: string;
 }
 
+export interface SessionClearParams extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+}
+
+export interface SessionSnapshotParams extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+}
+
 export interface SessionCancelTurnParams extends AgenCDaemonJsonObject {
   readonly sessionId: string;
   readonly reason?: string;
+}
+
+export interface SessionMcpServerConfig extends AgenCDaemonJsonObject {
+  readonly name: string;
+  readonly transport?: "stdio" | "sse" | "http" | "websocket" | "ws";
+  readonly command?: string;
+  readonly args?: readonly string[];
+  readonly endpoint?: string;
+  readonly enabled?: boolean;
+  readonly required?: boolean;
+}
+
+export interface SessionMcpAddServerParams extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly config: SessionMcpServerConfig;
 }
 
 export interface MessageContentBlock extends AgenCDaemonJsonObject {
@@ -328,7 +355,10 @@ export interface AgenCDaemonParamsByMethod {
   readonly "session.attach": SessionAttachParams;
   readonly "session.detach": SessionDetachParams;
   readonly "session.terminate": SessionTerminateParams;
+  readonly "session.clear": SessionClearParams;
+  readonly "session.snapshot": SessionSnapshotParams;
   readonly "session.cancelTurn": SessionCancelTurnParams;
+  readonly "session.mcp.addServer": SessionMcpAddServerParams;
   readonly "message.send": MessageSendParams;
   readonly "message.stream": MessageStreamParams;
   readonly "thread/realtime/start": ThreadRealtimeStartParams;
@@ -349,6 +379,7 @@ export interface AgenCDaemonParamsByMethod {
   readonly "health.ping": EmptyDaemonParams;
   readonly "health.ready": EmptyDaemonParams;
   readonly "health.stats": EmptyDaemonParams;
+  readonly "daemon.reload": EmptyDaemonParams;
   readonly "auth.login": EmptyDaemonParams;
   readonly "auth.whoami": EmptyDaemonParams;
   readonly "auth.logout": EmptyDaemonParams;
@@ -479,10 +510,42 @@ export interface SessionTerminateResult extends AgenCDaemonJsonObject {
   readonly reason?: string;
 }
 
+export interface SessionClearResult extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly cleared: true;
+  readonly clearedAt: string;
+}
+
+export interface SessionSnapshotResult extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly turnCount: number;
+  readonly tokenUsage: {
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+    readonly totalTokens: number;
+    readonly costUsd: number;
+  };
+  readonly cacheStats: {
+    readonly requestCount: number;
+    readonly cacheReadInputTokens: number;
+    readonly cacheCreationInputTokens: number;
+    readonly cacheTotalInputTokens: number;
+    readonly hitRate: number | null;
+  };
+}
+
 export interface SessionCancelTurnResult extends AgenCDaemonJsonObject {
   readonly sessionId: string;
   readonly cancelled: boolean;
   readonly reason?: string;
+}
+
+export interface SessionMcpAddServerResult extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly serverName: string;
+  readonly success: boolean;
+  readonly toolCount: number;
+  readonly error?: string;
 }
 
 export interface MessageSendResult extends AgenCDaemonJsonObject {
@@ -719,6 +782,17 @@ export interface HealthStatsResult extends AgenCDaemonJsonObject {
   readonly memory: HealthMemoryStats;
 }
 
+export interface DaemonReloadMcpServerResult extends AgenCDaemonJsonObject {
+  readonly status: "disabled" | "unsupported" | "listening";
+  readonly url?: string;
+}
+
+export interface DaemonReloadResult extends AgenCDaemonJsonObject {
+  readonly reloaded: true;
+  readonly configReloadedAt: string;
+  readonly mcpServer: DaemonReloadMcpServerResult;
+}
+
 export interface AuthIdentity extends AgenCDaemonJsonObject {
   readonly accountId?: string;
   readonly email?: string;
@@ -755,7 +829,10 @@ export interface AgenCDaemonResultByMethod {
   readonly "session.attach": SessionAttachResult;
   readonly "session.detach": SessionDetachResult;
   readonly "session.terminate": SessionTerminateResult;
+  readonly "session.clear": SessionClearResult;
+  readonly "session.snapshot": SessionSnapshotResult;
   readonly "session.cancelTurn": SessionCancelTurnResult;
+  readonly "session.mcp.addServer": SessionMcpAddServerResult;
   readonly "message.send": MessageSendResult;
   readonly "message.stream": MessageStreamResult;
   readonly "thread/realtime/start": ThreadRealtimeStartResponse;
@@ -776,6 +853,7 @@ export interface AgenCDaemonResultByMethod {
   readonly "health.ping": HealthPingResult;
   readonly "health.ready": HealthReadyResult;
   readonly "health.stats": HealthStatsResult;
+  readonly "daemon.reload": DaemonReloadResult;
   readonly "auth.login": AuthLoginResult;
   readonly "auth.whoami": AuthWhoamiResult;
   readonly "auth.logout": AuthLogoutResult;
@@ -937,6 +1015,28 @@ export class AgenCDaemonClient {
     return this.request("session.terminate", params);
   }
 
+  clearSession(params: SessionClearParams): Promise<SessionClearResult> {
+    return this.request("session.clear", params);
+  }
+
+  snapshotSession(
+    params: SessionSnapshotParams,
+  ): Promise<SessionSnapshotResult> {
+    return this.request("session.snapshot", params);
+  }
+
+  cancelSessionTurn(
+    params: SessionCancelTurnParams,
+  ): Promise<SessionCancelTurnResult> {
+    return this.request("session.cancelTurn", params);
+  }
+
+  addSessionMcpServer(
+    params: SessionMcpAddServerParams,
+  ): Promise<SessionMcpAddServerResult> {
+    return this.request("session.mcp.addServer", params);
+  }
+
   sendMessage(params: MessageSendParams): Promise<MessageSendResult> {
     return this.request("message.send", params);
   }
@@ -1035,6 +1135,10 @@ export class AgenCDaemonClient {
 
   stats(): Promise<HealthStatsResult> {
     return this.request("health.stats");
+  }
+
+  reloadDaemon(): Promise<DaemonReloadResult> {
+    return this.request("daemon.reload");
   }
 
   login(): Promise<AuthLoginResult> {
