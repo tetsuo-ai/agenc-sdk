@@ -26,6 +26,7 @@ export type AgenCDaemonMethod =
   | "session.terminate"
   | "session.clear"
   | "session.snapshot"
+  | "session.transcript"
   | "session.cancelTurn"
   | "session.mcp.addServer"
   | "message.send"
@@ -148,6 +149,10 @@ export interface SessionClearParams extends AgenCDaemonJsonObject {
 }
 
 export interface SessionSnapshotParams extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+}
+
+export interface SessionTranscriptParams extends AgenCDaemonJsonObject {
   readonly sessionId: string;
 }
 
@@ -357,6 +362,7 @@ export interface AgenCDaemonParamsByMethod {
   readonly "session.terminate": SessionTerminateParams;
   readonly "session.clear": SessionClearParams;
   readonly "session.snapshot": SessionSnapshotParams;
+  readonly "session.transcript": SessionTranscriptParams;
   readonly "session.cancelTurn": SessionCancelTurnParams;
   readonly "session.mcp.addServer": SessionMcpAddServerParams;
   readonly "message.send": MessageSendParams;
@@ -532,6 +538,16 @@ export interface SessionSnapshotResult extends AgenCDaemonJsonObject {
     readonly cacheTotalInputTokens: number;
     readonly hitRate: number | null;
   };
+}
+
+export interface SessionTranscriptMessage extends AgenCDaemonJsonObject {
+  readonly role: string;
+  readonly text: string;
+}
+
+export interface SessionTranscriptResult extends AgenCDaemonJsonObject {
+  readonly sessionId: string;
+  readonly messages: readonly SessionTranscriptMessage[];
 }
 
 export interface SessionCancelTurnResult extends AgenCDaemonJsonObject {
@@ -831,6 +847,7 @@ export interface AgenCDaemonResultByMethod {
   readonly "session.terminate": SessionTerminateResult;
   readonly "session.clear": SessionClearResult;
   readonly "session.snapshot": SessionSnapshotResult;
+  readonly "session.transcript": SessionTranscriptResult;
   readonly "session.cancelTurn": SessionCancelTurnResult;
   readonly "session.mcp.addServer": SessionMcpAddServerResult;
   readonly "message.send": MessageSendResult;
@@ -1023,6 +1040,12 @@ export class AgenCDaemonClient {
     params: SessionSnapshotParams,
   ): Promise<SessionSnapshotResult> {
     return this.request("session.snapshot", params);
+  }
+
+  transcriptSession(
+    params: SessionTranscriptParams,
+  ): Promise<SessionTranscriptResult> {
+    return this.request("session.transcript", params);
   }
 
   cancelSessionTurn(
