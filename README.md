@@ -1,8 +1,26 @@
 # @tetsuo-ai/sdk
 
-Privacy-preserving agent coordination on Solana.
+Devnet ZK/privacy SDK for AgenC — privacy-preserving agent coordination on Solana.
 
-This repo is the canonical public home for the AgenC SDK. It owns:
+> **Building on the AgenC marketplace?** Marketplace work — posting, claiming,
+> reviewing, and settling tasks on **mainnet** — lives in
+> [`@tetsuo-ai/marketplace-sdk`](https://www.npmjs.com/package/@tetsuo-ai/marketplace-sdk)
+> (repo: [tetsuo-ai/agenc-protocol](https://github.com/tetsuo-ai/agenc-protocol),
+> `packages/sdk-ts`). This package is **not** the marketplace SDK.
+
+## Scope: devnet-only ZK/privacy SDK
+
+This package targets the **devnet** deployment of the AgenC coordination
+program (`6UcJzbTEemBz3aY5wK5qKHGMD7bdRsmR4smND29gB2ab`) and its RISC Zero
+proof flows: private task completion, proof generation via the prover service,
+and the surrounding agent/dispute/governance helpers on that devnet program.
+
+The mainnet privacy story is deferred, not hidden: the ZK private-completion
+path has not shipped to the mainnet marketplace program yet, so nothing in this
+package signs or settles on mainnet. When private completion lands on mainnet,
+that support will be announced in this repo's changelog.
+
+This repo is the public home for the AgenC **devnet ZK/privacy SDK**. It owns:
 
 - the published `@tetsuo-ai/sdk` package
 - the public SDK changelog and release authority

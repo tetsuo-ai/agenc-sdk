@@ -5,6 +5,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- Repositioned the README and npm package description as the devnet-only ZK/privacy SDK, with a prominent pointer to `@tetsuo-ai/marketplace-sdk` (repo `tetsuo-ai/agenc-protocol`) for AgenC marketplace work. The mainnet privacy story is deferred, not hidden. No behavior changes.
+
 ### Added
 - Added initial changelog + API baseline tooling. (#983)
 
