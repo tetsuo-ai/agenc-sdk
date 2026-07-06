@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   createTask,
   claimTask,
@@ -104,6 +104,17 @@ describe("SDK contract tests", () => {
     expect(result).toHaveProperty("txSignature", "tx-create-task");
     expect(typeof result.txSignature).toBe("string");
     expect(result.txSignature).toBe("tx-create-task");
+
+    const builder = (program as any).methods.createTask.mock.results[0].value;
+    expect(builder.accountsPartial).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: result.taskPda,
+        creator: creator.publicKey,
+        authority: creator.publicKey,
+        systemProgram: SystemProgram.programId,
+      }),
+    );
+    expect(builder.signers).toHaveBeenCalledWith([creator]);
   });
 
   it("returns stable contract for configureTaskValidation", async () => {

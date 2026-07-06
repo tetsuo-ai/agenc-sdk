@@ -6,11 +6,9 @@ import crypto from "node:crypto";
 import { Connection, Keypair } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import * as sdk from "../dist/index.mjs";
+import { resolveIdlPath } from "./devnet-helpers.mjs";
 
 const DEFAULT_RPC_URL = process.env.AGENC_RPC_URL ?? sdk.DEVNET_RPC;
-const DEFAULT_IDL_PATH =
-  process.env.AGENC_IDL_PATH ??
-  "/Users/pchmirenko/AgenC-pr1469-fix/runtime/idl/agenc_coordination.json";
 const DEFAULT_COMMITMENT = "confirmed";
 const DEFAULT_ENDPOINT = "https://example.invalid/agenc-devnet-deep-test";
 const DEFAULT_REWARD = 10_000_000n;
@@ -30,7 +28,7 @@ Environment:
   CREATOR_WALLET          Required
   WORKER_WALLET           Required
   AGENC_RPC_URL           Optional (default: ${DEFAULT_RPC_URL})
-  AGENC_IDL_PATH          Optional (default: ${DEFAULT_IDL_PATH})
+  AGENC_IDL_PATH          Required. Path to agenc_coordination.json
   AGENC_DEVNET_DRIFT_MODE Optional: compat|strict (default: ${DEFAULT_DRIFT_MODE})
 `);
 }
@@ -199,10 +197,11 @@ async function main() {
 
   const creatorWalletPath = env("CREATOR_WALLET");
   const workerWalletPath = env("WORKER_WALLET");
+  const idlPath = resolveIdlPath();
   const [creator, worker, idl] = await Promise.all([
     loadKeypair(creatorWalletPath),
     loadKeypair(workerWalletPath),
-    loadJson(DEFAULT_IDL_PATH),
+    loadJson(idlPath),
   ]);
 
   if (creator.publicKey.equals(worker.publicKey)) {
