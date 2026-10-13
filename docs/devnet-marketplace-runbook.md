@@ -18,13 +18,13 @@ devnet validation result.
 
 - Program ID: `6UcJzbTEemBz3aY5wK5qKHGMD7bdRsmR4smND29gB2ab`
 - Upgrade authority wallet:
-  `/Users/pchmirenko/.config/solana/id.json`
+  `$HOME/.config/solana/id.json`
 - Protocol repo:
-  `/Users/pchmirenko/tmp/agenc-protocol-pr`
+  `$HOME/tmp/agenc-protocol-pr`
 - SDK repo:
-  `/Users/pchmirenko/agenc-sdk-prprep`
+  `$HOME/agenc-sdk-prprep`
 - Built IDL:
-  `/Users/pchmirenko/tmp/agenc-protocol-pr/target/idl/agenc_coordination.json`
+  `$HOME/tmp/agenc-protocol-pr/target/idl/agenc_coordination.json`
 
 Fresh wallet sets are strongly recommended. Reused wallets can fail due to
 spent balances or wallet-scoped cooldown overlap.
@@ -32,12 +32,12 @@ spent balances or wallet-scoped cooldown overlap.
 ## Upgrade Command
 
 ```bash
-env PATH=/Users/pchmirenko/.local/share/solana/install/active_release/bin:$PATH \
+env PATH=$HOME/.local/share/solana/install/active_release/bin:$PATH \
 anchor upgrade \
-  /Users/pchmirenko/tmp/agenc-protocol-pr/programs/agenc-coordination/target/deploy/agenc_coordination.so \
+  $HOME/tmp/agenc-protocol-pr/programs/agenc-coordination/target/deploy/agenc_coordination.so \
   --program-id 6UcJzbTEemBz3aY5wK5qKHGMD7bdRsmR4smND29gB2ab \
   --provider.cluster devnet \
-  --provider.wallet /Users/pchmirenko/.config/solana/id.json
+  --provider.wallet $HOME/.config/solana/id.json
 ```
 
 Validation upgrade on 2026-03-22:
@@ -48,7 +48,7 @@ Validation upgrade on 2026-03-22:
 ## Fresh Wallet Set Used On 2026-03-22
 
 Directory:
-`/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c`
+`$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c`
 
 - creator: `FvNKvfhh55DJX9vdsWxpxK6Mi9j2FAxw5yX1ddTomwkf`
 - worker: `2t84964u5bMCqXkYKfZgo1GNa3xQHU9iZC5LnYAebEUf`
@@ -65,13 +65,13 @@ Funding that cleared the suite cleanly:
 ## Focused Bid-Marketplace Validation
 
 ```bash
-CREATOR_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/creator.json \
-WORKER_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/worker.json \
-ARBITER_A_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-a.json \
-ARBITER_B_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-b.json \
-ARBITER_C_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-c.json \
-PROTOCOL_AUTHORITY_WALLET=/Users/pchmirenko/.config/solana/id.json \
-AGENC_IDL_PATH=/Users/pchmirenko/tmp/agenc-protocol-pr/target/idl/agenc_coordination.json \
+CREATOR_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/creator.json \
+WORKER_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/worker.json \
+ARBITER_A_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-a.json \
+ARBITER_B_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-b.json \
+ARBITER_C_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-c.json \
+PROTOCOL_AUTHORITY_WALLET=$HOME/.config/solana/id.json \
+AGENC_IDL_PATH=$HOME/tmp/agenc-protocol-pr/target/idl/agenc_coordination.json \
 AGENC_RPC_URL=https://api.devnet.solana.com \
 npm run test:devnet:bid-marketplace
 ```
@@ -83,13 +83,13 @@ Successful artifact from 2026-03-22:
 ## Full Marketplace Validation
 
 ```bash
-CREATOR_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/creator.json \
-WORKER_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/worker.json \
-ARBITER_A_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-a.json \
-ARBITER_B_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-b.json \
-ARBITER_C_WALLET=/Users/pchmirenko/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-c.json \
-PROTOCOL_AUTHORITY_WALLET=/Users/pchmirenko/.config/solana/id.json \
-AGENC_IDL_PATH=/Users/pchmirenko/tmp/agenc-protocol-pr/target/idl/agenc_coordination.json \
+CREATOR_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/creator.json \
+WORKER_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/worker.json \
+ARBITER_A_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-a.json \
+ARBITER_B_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-b.json \
+ARBITER_C_WALLET=$HOME/tmp/agenc-marketplace-devnet-fresh-2026-03-22-c/arbiter-c.json \
+PROTOCOL_AUTHORITY_WALLET=$HOME/.config/solana/id.json \
+AGENC_IDL_PATH=$HOME/tmp/agenc-protocol-pr/target/idl/agenc_coordination.json \
 AGENC_RPC_URL=https://api.devnet.solana.com \
 npm run test:devnet:marketplace
 ```
@@ -109,7 +109,7 @@ Observed result on 2026-03-22:
 Resume just the dispute resolution:
 
 ```bash
-PROTOCOL_AUTHORITY_WALLET=/Users/pchmirenko/.config/solana/id.json \
+PROTOCOL_AUTHORITY_WALLET=$HOME/.config/solana/id.json \
 npm run test:devnet:disputes -- --resume /var/folders/gd/mvb492r97z1bw8c0nzrwhj_m0000gp/T/agenc-sdk-devnet/dispute-1774212290897-c7f76a69.json
 ```
 

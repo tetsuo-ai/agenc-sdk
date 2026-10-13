@@ -3,6 +3,8 @@
 import { readFile } from "node:fs/promises";
 import process from "node:process";
 import crypto from "node:crypto";
+import os from "node:os";
+import path from "node:path";
 import { Connection, Keypair } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import * as sdk from "../dist/index.mjs";
@@ -11,7 +13,7 @@ const DEFAULT_RPC_URL = process.env.AGENC_RPC_URL ?? sdk.DEVNET_RPC;
 const DEFAULT_COMMITMENT = "confirmed";
 const DEFAULT_REWARD_LAMPORTS = 10_000_000n; // 0.01 SOL
 const DEFAULT_AGENT_ENDPOINT = "https://example.invalid/agenc-devnet-test";
-const DEFAULT_IDL_PATH = "/Users/pchmirenko/AgenC-pr1469-fix/runtime/idl/agenc_coordination.json";
+const DEFAULT_IDL_PATH = path.join(os.homedir(), "AgenC-pr1469-fix/runtime/idl/agenc_coordination.json");
 
 function usage() {
   process.stdout.write(`Usage:
